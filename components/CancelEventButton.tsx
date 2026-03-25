@@ -45,12 +45,39 @@ export function CancelEventButton({
         type="button"
         onClick={() => void handleCancel()}
         disabled={loading}
-        className="px-3 py-1.5 text-xs font-medium border border-red-200 text-red-600 rounded hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          background: "#fef2f2",
+          color: "#dc2626",
+          borderColor: "#fecaca",
+        }}
+        onMouseEnter={(e) => {
+          if (!loading) {
+            (e.currentTarget as HTMLElement).style.background = "#fee2e2";
+            (e.currentTarget as HTMLElement).style.borderColor = "#fca5a5";
+          }
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.background = "#fef2f2";
+          (e.currentTarget as HTMLElement).style.borderColor = "#fecaca";
+        }}
       >
-        {loading ? "Cancelling…" : "Cancel event"}
+        {loading ? (
+          <>
+            <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+            Cancelling…
+          </>
+        ) : (
+          "Cancel event"
+        )}
       </button>
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-1.5 text-xs" style={{ color: "var(--error)" }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
-

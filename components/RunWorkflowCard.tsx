@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { StatusBadge } from "./StatusBadge";
-import type { WorkflowRunResult } from "@/lib/api/types";
+import { StreamingExecutionPanel } from "./StreamingExecutionPanel";
 
 const SAMPLE_EMAIL =
   "Hi Dave, I'd love to talk about a design partner opportunity. I'm free Tuesday afternoon or Thursday morning. Let me know what works best.";
@@ -19,6 +17,10 @@ function parseSenderEmail(email: string): { name: string; company: string } | nu
   return { name, company };
 }
 
+type RunState =
+  | { phase: "input" }
+  | { phase: "streaming"; payload: Record<string, unknown> };
+
 export function RunWorkflowCard({
   workflowId,
   triggerType = "meeting_request_received",
@@ -29,227 +31,221 @@ export function RunWorkflowCard({
   const [emailText, setEmailText] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
   const [eventId, setEventId] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<WorkflowRunResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [runState, setRunState] = useState<RunState>({ phase: "input" });
 
   const isCancelled = triggerType === "event_cancelled";
   const parsed = parseSenderEmail(senderEmail);
 
-  async function handleRun() {
+  function handleRun() {
     if (isCancelled) {
       if (!eventId.trim()) {
-        setError("Event ID is required.");
+        setValidationError("Event ID is required.");
         return;
       }
     } else {
       if (!emailText.trim()) {
-        setError("Email body is required.");
+        setValidationError("Email body is required.");
         return;
       }
     }
-    setLoading(true);
-    setError(null);
-    setResult(null);
+    setValidationError(null);
 
-    try {
-      const body = isCancelled
-        ? { eventId: eventId.trim() }
-        : {
-            emailText: emailText.trim(),
-            ...(senderEmail.trim() ? { senderEmail: senderEmail.trim() } : {}),
-          };
+    const payload: Record<string, unknown> = isCancelled
+      ? { eventId: eventId.trim() }
+      : {
+          emailText: emailText.trim(),
+          ...(senderEmail.trim() ? { senderEmail: senderEmail.trim() } : {}),
+        };
 
-      const res = await fetch(`/api/workflows/${workflowId}/execute`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const body = (await res.json()) as { error?: string };
-        throw new Error(body.error ?? `HTTP ${res.status}`);
-      }
-
-      const data = (await res.json()) as { result: WorkflowRunResult };
-      setResult(data.result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-    } finally {
-      setLoading(false);
-    }
+    setRunState({ phase: "streaming", payload });
   }
 
+  function handleReset() {
+    setRunState({ phase: "input" });
+  }
+
+  const inputStyle = {
+    background: "#fafaf9",
+    border: "1px solid var(--border)",
+    borderRadius: "8px",
+    padding: "8px 10px",
+    fontSize: "13px",
+    color: "var(--foreground)",
+    fontFamily: "inherit",
+    width: "100%",
+    outline: "none",
+    transition: "border-color 150ms",
+  } as React.CSSProperties;
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-5">
-      <h3 className="font-semibold text-gray-900 mb-1">Run Workflow</h3>
-      <p className="text-sm text-gray-500 mb-4">
-        Paste a scheduling email to process it through this workflow.
-      </p>
-
-      {isCancelled ? (
-        <div className="mb-3">
-          <label className="text-xs font-medium text-gray-600 block mb-1">Event ID</label>
-          <input
-            type="text"
-            className="w-full border border-gray-200 rounded p-2 text-sm text-gray-800 font-mono placeholder-gray-400 focus:outline-none focus:border-gray-400"
-            placeholder="e.g. clxyz123..."
-            value={eventId}
-            onChange={(e) => setEventId(e.target.value)}
-            disabled={loading}
-          />
-        </div>
-      ) : (
+    <div
+      className="rounded-xl border p-5"
+      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+    >
+      {runState.phase === "input" ? (
         <>
-          <div className="mb-3">
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-medium text-gray-600">Sender email address</label>
-              <button
-                type="button"
-                onClick={() => setSenderEmail(SAMPLE_SENDER)}
-                className="text-xs text-indigo-600 hover:text-indigo-800"
-              >
-                Load sample
-              </button>
-            </div>
-            <input
-              type="text"
-              className="w-full border border-gray-200 rounded p-2 text-sm text-gray-800 font-mono placeholder-gray-400 focus:outline-none focus:border-gray-400"
-              placeholder="e.g. TimCook@apple.com"
-              value={senderEmail}
-              onChange={(e) => setSenderEmail(e.target.value)}
-              disabled={loading}
-            />
-            {senderEmail && (
-              <div className="mt-1.5 flex gap-4 text-xs text-gray-500">
-                <span>
-                  Research person:{" "}
-                  <span className={parsed ? "text-gray-800 font-medium" : "text-red-400"}>
-                    {parsed ? parsed.name : "—"}
-                  </span>
-                </span>
-                <span>
-                  Research company:{" "}
-                  <span className={parsed ? "text-gray-800 font-medium" : "text-red-400"}>
-                    {parsed ? parsed.company : "—"}
-                  </span>
-                </span>
-              </div>
-            )}
+          <div className="mb-4">
+            <h3
+              className="font-medium text-sm mb-0.5"
+              style={{ color: "var(--foreground)" }}
+            >
+              Run Workflow
+            </h3>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>
+              Paste a scheduling email to process it through this workflow.
+            </p>
           </div>
 
-          <div className="mb-3">
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-medium text-gray-600">Email body</label>
-              <button
-                type="button"
-                onClick={() => setEmailText(SAMPLE_EMAIL)}
-                className="text-xs text-indigo-600 hover:text-indigo-800"
+          {isCancelled ? (
+            <div className="mb-3">
+              <label
+                className="block text-xs font-medium mb-1.5"
+                style={{ color: "var(--muted)" }}
               >
-                Load sample
-              </button>
+                Event ID
+              </label>
+              <input
+                type="text"
+                style={inputStyle}
+                placeholder="e.g. clxyz123..."
+                value={eventId}
+                onChange={(e) => setEventId(e.target.value)}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+              />
             </div>
-            <textarea
-              className="w-full border border-gray-200 rounded p-3 text-sm text-gray-800 font-mono placeholder-gray-400 focus:outline-none focus:border-gray-400 resize-y"
-              rows={5}
-              placeholder="Paste scheduling email body here..."
-              value={emailText}
-              onChange={(e) => setEmailText(e.target.value)}
-              disabled={loading}
-            />
-          </div>
+          ) : (
+            <>
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label
+                    className="text-xs font-medium"
+                    style={{ color: "var(--muted)" }}
+                  >
+                    Sender email address
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setSenderEmail(SAMPLE_SENDER)}
+                    className="text-xs font-medium transition-colors cursor-pointer"
+                    style={{ color: "var(--accent)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-hover)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                  >
+                    Load sample
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  style={{ ...inputStyle, fontFamily: "ui-monospace, monospace" }}
+                  placeholder="e.g. TimCook@apple.com"
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+                />
+                {senderEmail && (
+                  <div
+                    className="mt-2 flex gap-4 text-xs rounded-lg px-3 py-2"
+                    style={{ background: "var(--border-subtle)", color: "var(--muted)" }}
+                  >
+                    <span>
+                      Person:{" "}
+                      <span
+                        className="font-medium"
+                        style={{ color: parsed ? "var(--foreground)" : "var(--error)" }}
+                      >
+                        {parsed ? parsed.name : "—"}
+                      </span>
+                    </span>
+                    <span>
+                      Company:{" "}
+                      <span
+                        className="font-medium"
+                        style={{ color: parsed ? "var(--foreground)" : "var(--error)" }}
+                      >
+                        {parsed ? parsed.company : "—"}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label
+                    className="text-xs font-medium"
+                    style={{ color: "var(--muted)" }}
+                  >
+                    Email body
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setEmailText(SAMPLE_EMAIL)}
+                    className="text-xs font-medium transition-colors cursor-pointer"
+                    style={{ color: "var(--accent)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-hover)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                  >
+                    Load sample
+                  </button>
+                </div>
+                <textarea
+                  style={{
+                    ...inputStyle,
+                    fontFamily: "ui-monospace, monospace",
+                    resize: "vertical",
+                    minHeight: "100px",
+                  }}
+                  rows={5}
+                  placeholder="Paste scheduling email body here..."
+                  value={emailText}
+                  onChange={(e) => setEmailText(e.target.value)}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+                />
+              </div>
+            </>
+          )}
+
+          {validationError && (
+            <p
+              className="mb-3 text-xs rounded-lg px-3 py-2"
+              style={{
+                color: "var(--error)",
+                background: "var(--error-subtle)",
+                border: "1px solid #fecaca",
+              }}
+            >
+              {validationError}
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={handleRun}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer"
+            style={{
+              background: "var(--foreground)",
+              color: "#ffffff",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "#2d2d2b";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "var(--foreground)";
+            }}
+          >
+            Run workflow
+          </button>
         </>
-      )}
-
-      {error && (
-        <p className="mb-3 text-sm text-red-600">{error}</p>
-      )}
-
-      <button
-        type="button"
-        onClick={() => void handleRun()}
-        disabled={loading}
-        className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? "Running…" : "Run workflow"}
-      </button>
-
-      {result && (
-        <div className="mt-5 pt-5 border-t border-gray-100">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-sm font-medium text-gray-700">Result:</span>
-            <StatusBadge status={result.status} />
-          </div>
-
-          <dl className="space-y-1 text-sm mb-4">
-            <div className="flex gap-2">
-              <dt className="text-gray-400 w-32 shrink-0">Execution ID</dt>
-              <dd className="text-gray-700 font-mono text-xs truncate">{result.workflowExecutionId}</dd>
-            </div>
-            <div className="flex gap-2">
-              <dt className="text-gray-400 w-32 shrink-0">Steps</dt>
-              <dd className="text-gray-700">{result.steps.length} completed</dd>
-            </div>
-            {result.errorMessage && (
-              <div className="flex gap-2">
-                <dt className="text-gray-400 w-32 shrink-0">Error</dt>
-                <dd className="text-red-600 text-xs">{result.errorMessage}</dd>
-              </div>
-            )}
-          </dl>
-
-          {result.context.replyDraft && (
-            <div className="mb-4">
-              <p className="text-xs font-medium text-gray-500 mb-1">Reply draft</p>
-              <pre className="text-xs bg-gray-50 border border-gray-200 rounded p-3 whitespace-pre-wrap font-mono text-gray-700">
-                {result.context.replyDraft}
-              </pre>
-            </div>
-          )}
-
-          {result.context.createdEvent && (
-            <div className="mb-4">
-              <p className="text-xs font-medium text-gray-500 mb-1">Created event</p>
-              <div className="text-xs bg-gray-50 border border-gray-200 rounded p-3 text-gray-700 space-y-0.5">
-                <p><span className="font-medium">Title:</span> {result.context.createdEvent.title}</p>
-                <p><span className="font-medium">Start:</span> {result.context.createdEvent.startTime}</p>
-                <p><span className="font-medium">End:</span> {result.context.createdEvent.endTime}</p>
-              </div>
-            </div>
-          )}
-
-          {result.context.selectedSlot && !result.context.createdEvent && (
-            <div className="mb-4">
-              <p className="text-xs font-medium text-gray-500 mb-1">Selected slot</p>
-              <div className="text-xs bg-gray-50 border border-gray-200 rounded p-3 text-gray-700">
-                {result.context.selectedSlot.startTime} → {result.context.selectedSlot.endTime}
-              </div>
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={`/executions/${result.workflowExecutionId}`}
-              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
-            >
-              View execution →
-            </Link>
-            <Link
-              href="/executions"
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              All executions
-            </Link>
-            {result.context.createdEvent && (
-              <Link
-                href="/calendar"
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                Go to calendar
-              </Link>
-            )}
-          </div>
-        </div>
+      ) : (
+        <StreamingExecutionPanel
+          workflowId={workflowId}
+          triggerPayload={runState.payload}
+          onReset={handleReset}
+        />
       )}
     </div>
   );

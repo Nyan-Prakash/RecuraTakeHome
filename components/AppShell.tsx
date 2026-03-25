@@ -13,24 +13,47 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 flex items-center h-12 gap-6">
-          <Link href="/" className="text-sm font-semibold text-gray-900">
-            Workflow Tool
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--background)" }}>
+      <header
+        className="sticky top-0 z-10 border-b"
+        style={{
+          background: "rgba(255,255,255,0.85)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderColor: "var(--border)",
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-6 flex items-center h-11 gap-6">
+          <Link
+            href="/"
+            className="shrink-0"
+            style={{ textDecoration: "none" }}
+          >
+            <span
+              className="font-semibold text-sm"
+              style={{ color: "var(--foreground)", letterSpacing: "-0.01em" }}
+            >
+              Recura
+            </span>
           </Link>
-          <nav className="flex items-center gap-1">
+
+          <div className="w-px h-4 shrink-0" style={{ background: "var(--border)" }} />
+
+          <nav className="flex items-center gap-0.5">
             {NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+              const isActive =
+                pathname === link.href || pathname.startsWith(link.href + "/");
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-gray-100 text-gray-900"
-                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
+                  className="px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 nav-link"
+                  style={{
+                    color: isActive ? "var(--foreground)" : "var(--muted)",
+                    background: isActive ? "var(--border-subtle)" : "transparent",
+                    textDecoration: "none",
+                  }}
+                  data-active={isActive ? "true" : undefined}
                 >
                   {link.label}
                 </Link>
@@ -39,6 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
       </header>
+
       <main className="flex-1">
         <div className="max-w-6xl mx-auto px-6 py-8">{children}</div>
       </main>

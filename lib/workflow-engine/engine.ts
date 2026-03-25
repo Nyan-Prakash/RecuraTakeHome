@@ -21,12 +21,24 @@ import type {
 } from "./types";
 
 // ---------------------------------------------------------------------------
+// Streaming event types
+// ---------------------------------------------------------------------------
+
+export type WorkflowStreamEvent =
+  | { type: "workflow_start"; workflowExecutionId: string; totalSteps: number }
+  | { type: "step_start"; stepIndex: number; actionType: string; stepExecutionId: string }
+  | { type: "step_complete"; stepIndex: number; actionType: string; stepExecutionId: string; output: unknown }
+  | { type: "step_failed"; stepIndex: number; actionType: string; stepExecutionId: string; errorMessage: string }
+  | { type: "workflow_complete"; status: "success" | "failed"; context: ExecutionContext; errorMessage: string | null };
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 export type ExecuteWorkflowArgs = {
   workflowId: string;
   triggerPayload: unknown;
+  onEvent?: (event: WorkflowStreamEvent) => void;
 };
 
 /**
@@ -45,7 +57,7 @@ export type ExecuteWorkflowArgs = {
 export async function executeWorkflow(
   args: ExecuteWorkflowArgs
 ): Promise<WorkflowRunResult> {
-  const { workflowId, triggerPayload } = args;
+  const { workflowId, triggerPayload, onEvent } = args;
 
   // ------------------------------------------------------------------
   // 1. Load workflow
@@ -94,7 +106,9 @@ export async function executeWorkflow(
   const steps: StepRunResult[] = [];
   let currentContext: ExecutionContext = { ...context };
 
-  for (const action of enabledActions) {
+  onEvent?.({ type: "workflow_start", workflowExecutionId, totalSteps: enabledActions.length });
+
+  for (const [stepIndex, action] of enabledActions.entries()) {
     // Snapshot context before the step runs
     const inputSnapshot = safeSerializeForDb(currentContext);
 
@@ -110,6 +124,7 @@ export async function executeWorkflow(
 
     // Mark step running
     await markStepExecutionRunning(stepExecutionId);
+    onEvent?.({ type: "step_start", stepIndex, actionType: action.type, stepExecutionId });
 
     try {
       // Resolve handler and config
@@ -135,6 +150,8 @@ export async function executeWorkflow(
         output: result.output,
         errorMessage: null,
       });
+
+      onEvent?.({ type: "step_complete", stepIndex, actionType: action.type, stepExecutionId, output: result.output });
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : String(err);
@@ -150,8 +167,12 @@ export async function executeWorkflow(
         errorMessage,
       });
 
+      onEvent?.({ type: "step_failed", stepIndex, actionType: action.type, stepExecutionId, errorMessage });
+
       // Persist workflow failure and stop
       await markWorkflowExecutionFailed(workflowExecutionId, errorMessage);
+
+      onEvent?.({ type: "workflow_complete", status: "failed", context: currentContext, errorMessage });
 
       return {
         workflowExecutionId,
@@ -169,6 +190,8 @@ export async function executeWorkflow(
   // 7. All steps succeeded
   // ------------------------------------------------------------------
   await markWorkflowExecutionSuccess(workflowExecutionId);
+
+  onEvent?.({ type: "workflow_complete", status: "success", context: currentContext, errorMessage: null });
 
   return {
     workflowExecutionId,

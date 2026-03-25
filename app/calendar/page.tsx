@@ -49,7 +49,6 @@ export default function CalendarPage() {
 
   function handleCancelled(result: CancelResult) {
     setLastCancelResult(result);
-    // Update the event in local state immediately
     setEvents((prev) =>
       prev.map((e) => (e.id === result.event.id ? { ...e, status: "cancelled" } : e))
     );
@@ -57,104 +56,208 @@ export default function CalendarPage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-6">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-7">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1
+            className="font-semibold"
+            style={{
+              fontSize: "20px",
+              color: "var(--foreground)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Calendar
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
             Events created by workflow runs. Cancelling an event triggers the Event Cancellation workflow.
           </p>
         </div>
         <button
           type="button"
           onClick={() => void loadEvents()}
-          className="text-sm text-gray-500 hover:text-gray-800 border border-gray-200 rounded px-3 py-1.5"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150 cursor-pointer"
+          style={{
+            color: "var(--muted)",
+            borderColor: "var(--border)",
+            background: "var(--surface)",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.color = "var(--foreground)";
+            (e.currentTarget as HTMLElement).style.borderColor = "#c7d2fe";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.color = "var(--muted)";
+            (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
+          }}
         >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="23 4 23 10 17 10" />
+            <polyline points="1 20 1 14 7 14" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
           Refresh
         </button>
       </div>
 
-      {/* Last cancel result banner */}
+      {/* Cancel result banner */}
       {lastCancelResult && (
-        <div className="mb-5 bg-orange-50 border border-orange-200 rounded-lg p-4">
+        <div
+          className="mb-5 rounded-xl p-4 border"
+          style={{
+            background: "var(--warning-subtle)",
+            borderColor: "#fde68a",
+          }}
+        >
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-orange-800">
+            <p
+              className="text-sm font-medium"
+              style={{ color: "#92400e" }}
+            >
               Event cancelled — Event Cancellation Handler triggered
             </p>
             <button
               type="button"
               onClick={() => setLastCancelResult(null)}
-              className="text-xs text-orange-400 hover:text-orange-600"
+              className="text-xs transition-colors cursor-pointer"
+              style={{ color: "#d97706" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#92400e")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#d97706")}
             >
               Dismiss
             </button>
           </div>
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-3">
             <StatusBadge status={lastCancelResult.execution.status} />
-            <span className="text-orange-700 text-xs">
+            <span className="text-xs" style={{ color: "#a16207" }}>
               {lastCancelResult.execution.steps.length} steps run
             </span>
             <Link
               href={`/executions/${lastCancelResult.execution.workflowExecutionId}`}
-              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              className="text-xs font-medium transition-colors"
+              style={{ color: "var(--accent)", textDecoration: "none" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-hover)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--accent)")}
             >
               View execution →
             </Link>
           </div>
           {lastCancelResult.execution.errorMessage && (
-            <p className="mt-1 text-xs text-red-600">{lastCancelResult.execution.errorMessage}</p>
+            <p className="mt-1 text-xs" style={{ color: "var(--error)" }}>
+              {lastCancelResult.execution.errorMessage}
+            </p>
           )}
         </div>
       )}
 
       {loading && (
-        <p className="text-sm text-gray-400">Loading events…</p>
+        <div className="flex items-center gap-2 py-8">
+          <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: "var(--muted)" }}>
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
+            Loading events…
+          </p>
+        </div>
       )}
 
       {!loading && error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+        <div
+          className="p-3.5 rounded-lg text-sm"
+          style={{
+            background: "var(--error-subtle)",
+            border: "1px solid #fecaca",
+            color: "var(--error)",
+          }}
+        >
           {error}
         </div>
       )}
 
       {!loading && !error && events.length === 0 && (
-        <EmptyState
-          message="No calendar events yet. Run the Meeting Request Processor to create one."
-        />
+        <EmptyState message="No calendar events yet. Run the Meeting Request Processor to create one." />
       )}
 
       {!loading && !error && events.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {events.map((event) => (
             <div
               key={event.id}
-              className="bg-white border border-gray-200 rounded-lg p-5"
+              className="rounded-xl p-5 border"
+              style={{
+                background: "var(--surface)",
+                borderColor: "var(--border)",
+              }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="font-semibold text-gray-900">{event.title}</h2>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <h2
+                      className="font-medium text-sm"
+                      style={{ color: "var(--foreground)" }}
+                    >
+                      {event.title}
+                    </h2>
                     <StatusBadge status={event.status} />
                   </div>
-                  <div className="text-sm text-gray-500 mb-2">
+                  <div
+                    className="text-xs mb-2 font-medium"
+                    style={{ color: "var(--muted)" }}
+                  >
                     {formatDateTime(event.startTime)} → {formatDateTime(event.endTime)}
                   </div>
                   {event.description && (
-                    <p className="text-sm text-gray-500 mb-2">{event.description}</p>
+                    <p
+                      className="text-xs mb-2.5 leading-relaxed"
+                      style={{ color: "var(--muted)" }}
+                    >
+                      {event.description}
+                    </p>
                   )}
-                  <div className="flex flex-wrap gap-3 text-xs text-gray-400">
+                  <div className="flex flex-wrap gap-2">
                     {event.meetingSummary && (
-                      <span>Summary available</span>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full border"
+                        style={{
+                          color: "var(--muted)",
+                          borderColor: "var(--border)",
+                          background: "var(--border-subtle)",
+                        }}
+                      >
+                        Summary available
+                      </span>
                     )}
                     {event.attendeeResearch && (
-                      <span>Attendee research available</span>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full border"
+                        style={{
+                          color: "var(--muted)",
+                          borderColor: "var(--border)",
+                          background: "var(--border-subtle)",
+                        }}
+                      >
+                        Attendee research
+                      </span>
                     )}
                     {event.preMeetingNotes && (
-                      <span>Pre-meeting notes available</span>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full border"
+                        style={{
+                          color: "var(--muted)",
+                          borderColor: "var(--border)",
+                          background: "var(--border-subtle)",
+                        }}
+                      >
+                        Pre-meeting notes
+                      </span>
                     )}
                     {event.sourceWorkflowExecutionId && (
                       <Link
                         href={`/executions/${event.sourceWorkflowExecutionId}`}
-                        className="text-indigo-500 hover:text-indigo-700"
+                        className="text-xs font-medium transition-colors"
+                        style={{ color: "var(--accent)", textDecoration: "none" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-hover)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--accent)")}
                       >
                         Source execution →
                       </Link>

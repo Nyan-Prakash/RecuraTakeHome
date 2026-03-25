@@ -37,34 +37,47 @@ const ACTION_LABELS: Record<string, string> = {
   generate_reschedule_email: "Generate Reschedule Email",
 };
 
-function StepRow({ step }: { step: StepRow }) {
+function StepCard({ step }: { step: StepRow }) {
   const label = ACTION_LABELS[step.actionType] ?? step.actionType;
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b border-gray-100">
+    <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+      <div
+        className="flex items-center gap-3 px-4 py-3 border-b"
+        style={{ background: "var(--border-subtle)", borderColor: "var(--border-subtle)" }}
+      >
         <StatusBadge status={step.status} />
-        <span className="font-medium text-sm text-gray-900">{label}</span>
-        <span className="text-xs text-gray-400 font-mono ml-auto">{step.actionType}</span>
+        <span className="font-medium text-sm" style={{ color: "var(--foreground)" }}>
+          {label}
+        </span>
+        <span className="text-xs font-mono ml-auto" style={{ color: "var(--muted)" }}>
+          {step.actionType}
+        </span>
       </div>
-      <div className="px-4 py-3 grid grid-cols-2 gap-4">
+      <div className="px-4 py-3 grid grid-cols-2 gap-4" style={{ background: "var(--surface)" }}>
         <div>
-          <p className="text-xs font-medium text-gray-400 mb-1">Input</p>
+          <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Input</p>
           <JsonBlock value={step.input} />
         </div>
         <div>
-          <p className="text-xs font-medium text-gray-400 mb-1">Output</p>
+          <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Output</p>
           <JsonBlock value={step.output} />
         </div>
       </div>
       {step.errorMessage && (
-        <div className="px-4 pb-3">
-          <p className="text-xs font-medium text-red-500 mb-1">Error</p>
-          <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded p-2">
+        <div className="px-4 pb-3" style={{ background: "var(--surface)" }}>
+          <p className="text-xs font-medium mb-1" style={{ color: "var(--error)" }}>Error</p>
+          <p
+            className="text-xs rounded-lg p-2.5"
+            style={{ color: "var(--error)", background: "var(--error-subtle)", border: "1px solid #fecaca" }}
+          >
             {step.errorMessage}
           </p>
         </div>
       )}
-      <div className="px-4 pb-3 flex gap-4 text-xs text-gray-400">
+      <div
+        className="px-4 py-2.5 flex gap-4 text-xs border-t"
+        style={{ color: "var(--muted)", borderColor: "var(--border-subtle)", background: "var(--surface)" }}
+      >
         <span>Started: {formatDate(step.startedAt)}</span>
         <span>Completed: {formatDate(step.completedAt)}</span>
       </div>
@@ -82,7 +95,6 @@ export default async function ExecutionDetailPage({ params }: Props) {
     notFound();
   }
 
-  // Extract artifacts from step outputs for display
   const context = (() => {
     const ctx: Record<string, unknown> = {};
     for (const step of execution.steps) {
@@ -102,127 +114,148 @@ export default async function ExecutionDetailPage({ params }: Props) {
   const fallbackSlots = context["fallbackSlots"];
 
   const hasArtifacts = Boolean(
-    selectedSlot ||
-    createdEvent ||
-    replyDraft ||
-    attendeeResearch ||
-    companyResearch ||
-    preMeetingNotes ||
-    fallbackSlots
+    selectedSlot || createdEvent || replyDraft ||
+    attendeeResearch || companyResearch || preMeetingNotes || fallbackSlots
   );
+
+  const sectionStyle = {
+    background: "var(--surface)",
+    border: "1px solid var(--border)",
+    borderRadius: "12px",
+    padding: "20px",
+    marginBottom: "16px",
+  } as React.CSSProperties;
+
+  const artifactLabelStyle = {
+    fontSize: "11px",
+    fontWeight: 500,
+    color: "var(--muted)",
+    marginBottom: "6px",
+  } as React.CSSProperties;
+
+  const artifactBlockStyle = {
+    background: "#f9f9f7",
+    border: "1px solid var(--border)",
+    borderRadius: "8px",
+    padding: "10px 12px",
+    fontSize: "12px",
+    color: "#374151",
+  } as React.CSSProperties;
 
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
-        <Link href="/executions" className="text-sm text-gray-400 hover:text-gray-600">
-          ← Executions
+        <Link href="/executions" className="hover-link text-xs font-medium inline-flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Executions
         </Link>
       </div>
 
-      <PageHeader
-        title="Execution Detail"
-        description="Step-by-step record of a single workflow run."
-      />
+      <PageHeader title="Execution Detail" description="Step-by-step record of a single workflow run." />
 
-      {/* Summary card */}
-      <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
+      {/* Summary */}
+      <div style={sectionStyle}>
         <div className="flex items-center gap-2 mb-4">
           <StatusBadge status={execution.status} />
           <TriggerBadge triggerType={execution.triggerType} />
         </div>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
           <div>
-            <dt className="text-xs font-medium text-gray-400">Workflow</dt>
-            <dd className="text-gray-900 font-medium">
-              <Link href={`/workflows/${execution.workflowId}`} className="hover:text-indigo-600">
+            <dt className="text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>Workflow</dt>
+            <dd className="font-medium">
+              <Link href={`/workflows/${execution.workflowId}`} className="hover-link" style={{ color: "var(--foreground)" }}>
                 {execution.workflow.name}
               </Link>
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-400">Execution ID</dt>
-            <dd className="text-gray-700 font-mono text-xs">{execution.id}</dd>
+            <dt className="text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>Execution ID</dt>
+            <dd className="font-mono text-xs" style={{ color: "var(--foreground)" }}>{execution.id}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-400">Started</dt>
-            <dd className="text-gray-700">{formatDate(execution.startedAt)}</dd>
+            <dt className="text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>Started</dt>
+            <dd style={{ color: "var(--foreground)" }}>{formatDate(execution.startedAt)}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-400">Completed</dt>
-            <dd className="text-gray-700">{formatDate(execution.completedAt)}</dd>
+            <dt className="text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>Completed</dt>
+            <dd style={{ color: "var(--foreground)" }}>{formatDate(execution.completedAt)}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-400">Steps</dt>
-            <dd className="text-gray-700">{execution.steps.length} steps</dd>
+            <dt className="text-xs font-medium mb-0.5" style={{ color: "var(--muted)" }}>Steps</dt>
+            <dd style={{ color: "var(--foreground)" }}>{execution.steps.length} steps</dd>
           </div>
           {execution.errorMessage && (
             <div className="col-span-2">
-              <dt className="text-xs font-medium text-red-500">Error</dt>
-              <dd className="text-red-600 text-sm">{execution.errorMessage}</dd>
+              <dt className="text-xs font-medium mb-0.5" style={{ color: "var(--error)" }}>Error</dt>
+              <dd className="text-sm" style={{ color: "var(--error)" }}>{execution.errorMessage}</dd>
             </div>
           )}
         </dl>
       </div>
 
       {/* Trigger payload */}
-      <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
-        <h2 className="font-semibold text-gray-900 text-sm mb-3">Trigger Payload</h2>
+      <div style={sectionStyle}>
+        <h2 className="font-medium text-sm mb-3" style={{ color: "var(--foreground)" }}>
+          Trigger Payload
+        </h2>
         <JsonBlock value={execution.triggerPayload} />
       </div>
 
       {/* Artifacts */}
       {hasArtifacts && (
-        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
-          <h2 className="font-semibold text-gray-900 text-sm mb-1">Artifacts</h2>
-          <p className="text-xs text-gray-400 mb-4">Key outputs produced by this run.</p>
+        <div style={sectionStyle}>
+          <h2 className="font-medium text-sm mb-0.5" style={{ color: "var(--foreground)" }}>Artifacts</h2>
+          <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>Key outputs produced by this run.</p>
           <div className="space-y-4">
             {Boolean(selectedSlot) && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-1">Selected Slot</p>
+                <p style={artifactLabelStyle}>Selected Slot</p>
                 <JsonBlock value={selectedSlot} />
               </div>
             )}
             {Boolean(createdEvent) && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-1">Created Event</p>
+                <p style={artifactLabelStyle}>Created Event</p>
                 <JsonBlock value={createdEvent} />
               </div>
             )}
             {Boolean(replyDraft) && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-1">Reply Draft</p>
-                <pre className="text-xs bg-gray-50 border border-gray-200 rounded p-3 whitespace-pre-wrap font-mono text-gray-700">
+                <p style={artifactLabelStyle}>Reply Draft</p>
+                <pre className="whitespace-pre-wrap font-mono leading-relaxed" style={artifactBlockStyle}>
                   {String(replyDraft)}
                 </pre>
               </div>
             )}
             {Boolean(attendeeResearch) && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-1">Attendee Research</p>
-                <p className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded p-3">
+                <p style={artifactLabelStyle}>Attendee Research</p>
+                <p className="leading-relaxed" style={{ ...artifactBlockStyle, fontSize: "13px" }}>
                   {String(attendeeResearch)}
                 </p>
               </div>
             )}
             {Boolean(companyResearch) && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-1">Company Research</p>
-                <p className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded p-3">
+                <p style={artifactLabelStyle}>Company Research</p>
+                <p className="leading-relaxed" style={{ ...artifactBlockStyle, fontSize: "13px" }}>
                   {String(companyResearch)}
                 </p>
               </div>
             )}
             {Boolean(preMeetingNotes) && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-1">Pre-Meeting Notes</p>
-                <pre className="text-xs bg-gray-50 border border-gray-200 rounded p-3 whitespace-pre-wrap font-mono text-gray-700">
+                <p style={artifactLabelStyle}>Pre-Meeting Notes</p>
+                <pre className="whitespace-pre-wrap font-mono leading-relaxed" style={artifactBlockStyle}>
                   {String(preMeetingNotes)}
                 </pre>
               </div>
             )}
             {Boolean(fallbackSlots) && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-1">Fallback Slots</p>
+                <p style={artifactLabelStyle}>Fallback Slots</p>
                 <JsonBlock value={fallbackSlots} />
               </div>
             )}
@@ -232,16 +265,18 @@ export default async function ExecutionDetailPage({ params }: Props) {
 
       {/* Step timeline */}
       <div className="mb-2">
-        <h2 className="font-semibold text-gray-900 mb-4">
+        <h2 className="font-medium mb-4" style={{ color: "var(--foreground)" }}>
           Step Timeline
-          <span className="ml-2 text-sm font-normal text-gray-400">({execution.steps.length} steps)</span>
+          <span className="ml-2 text-sm font-normal" style={{ color: "var(--muted)" }}>
+            ({execution.steps.length} steps)
+          </span>
         </h2>
         {execution.steps.length === 0 ? (
           <EmptyState message="No steps recorded for this execution." />
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {execution.steps.map((step) => (
-              <StepRow key={step.id} step={step} />
+              <StepCard key={step.id} step={step} />
             ))}
           </div>
         )}

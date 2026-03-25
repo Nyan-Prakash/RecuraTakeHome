@@ -9,7 +9,6 @@ import { RunWorkflowCard } from "@/components/RunWorkflowCard";
 import { getWorkflowById } from "@/lib/db/workflows";
 import type { WorkflowDefinition } from "@/lib/workflow-engine/types";
 
-// Human-readable action type labels
 const ACTION_LABELS: Record<string, string> = {
   summarize_email: "Summarize Email",
   extract_availability: "Extract Availability",
@@ -39,60 +38,108 @@ export default async function WorkflowDetailPage({ params }: Props) {
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
-        <Link href="/workflows" className="text-sm text-gray-400 hover:text-gray-600">
-          ← Workflows
+        <Link
+          href="/workflows"
+          className="hover-link text-xs font-medium inline-flex items-center gap-1.5"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Workflows
         </Link>
       </div>
 
       <PageHeader title={workflow.name} description={workflow.description} />
 
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex items-center gap-2 mb-7">
         <TriggerBadge triggerType={workflow.triggerType} />
         <StatusBadge status={workflow.isActive ? "active" : "inactive"} />
-        <span className="text-sm text-gray-400">{workflow.actions.length} total actions</span>
+        <span className="text-xs" style={{ color: "var(--muted)" }}>
+          {workflow.actions.length} total actions
+        </span>
       </div>
 
       {/* Actions */}
-      <div className="bg-white border border-gray-200 rounded-lg mb-6">
-        <div className="px-5 py-3 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900 text-sm">Execution Steps</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
+      <div
+        className="rounded-xl mb-6 overflow-hidden border"
+        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+      >
+        <div
+          className="px-5 py-3.5 border-b"
+          style={{ borderColor: "var(--border-subtle)" }}
+        >
+          <h2 className="font-medium text-sm" style={{ color: "var(--foreground)" }}>
+            Execution Steps
+          </h2>
+          <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
             Steps run sequentially. Disabled steps are skipped.
           </p>
         </div>
-        <div className="divide-y divide-gray-50">
-          {workflow.actions.map((action) => {
+        <div>
+          {workflow.actions.map((action, idx) => {
             const label = ACTION_LABELS[action.type] ?? action.type;
             return (
               <div
                 key={action.id}
-                className={`flex items-start gap-4 px-5 py-3.5 ${!action.isEnabled ? "opacity-40" : ""}`}
+                className="flex items-start gap-4 px-5 py-3.5"
+                style={{
+                  opacity: action.isEnabled ? 1 : 0.4,
+                  borderBottom:
+                    idx < workflow.actions.length - 1
+                      ? "1px solid var(--border-subtle)"
+                      : "none",
+                }}
               >
-                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-xs font-mono text-gray-500">{action.order}</span>
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                  style={{ background: "var(--border-subtle)" }}
+                >
+                  <span className="text-xs font-mono font-medium" style={{ color: "var(--muted)" }}>
+                    {action.order}
+                  </span>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className={`text-sm font-medium ${action.isEnabled ? "text-gray-900" : "text-gray-400"}`}>
+                    <span
+                      className="text-sm font-medium"
+                      style={{ color: action.isEnabled ? "var(--foreground)" : "var(--muted)" }}
+                    >
                       {label}
                     </span>
                     {action.isOptional && (
-                      <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">
+                      <span
+                        className="text-xs rounded-full px-2 py-0.5 border"
+                        style={{
+                          color: "var(--muted)",
+                          borderColor: "var(--border)",
+                          background: "var(--border-subtle)",
+                        }}
+                      >
                         optional
                       </span>
                     )}
                     {!action.isEnabled && (
-                      <span className="text-xs text-gray-400">disabled</span>
+                      <span className="text-xs" style={{ color: "var(--muted)" }}>
+                        disabled
+                      </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 font-mono mt-0.5">{action.type}</p>
+                  <p className="text-xs font-mono mt-0.5" style={{ color: "var(--muted)" }}>
+                    {action.type}
+                  </p>
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="px-5 py-2.5 border-t border-gray-100 bg-gray-50 rounded-b-lg">
-          <p className="text-xs text-gray-400">
+        <div
+          className="px-5 py-2.5 rounded-b-xl"
+          style={{
+            borderTop: "1px solid var(--border-subtle)",
+            background: "var(--border-subtle)",
+          }}
+        >
+          <p className="text-xs" style={{ color: "var(--muted)" }}>
             {enabledActions.length} of {workflow.actions.length} steps enabled
           </p>
         </div>
@@ -102,11 +149,16 @@ export default async function WorkflowDetailPage({ params }: Props) {
       {workflow.triggerType === "meeting_request_received" ? (
         <RunWorkflowCard workflowId={workflow.id} />
       ) : (
-        <div className="bg-white border border-gray-200 rounded-lg p-5">
-          <h3 className="font-semibold text-gray-900 mb-1">Manual Execution</h3>
-          <p className="text-sm text-gray-500">
+        <div
+          className="rounded-xl p-5 border"
+          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+        >
+          <h3 className="font-medium text-sm mb-1" style={{ color: "var(--foreground)" }}>
+            Manual Execution
+          </h3>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
             This workflow is triggered from the{" "}
-            <Link href="/calendar" className="text-indigo-600 hover:text-indigo-800">
+            <Link href="/calendar" className="hover-link-accent font-medium">
               Calendar page
             </Link>{" "}
             when an event is cancelled.
