@@ -77,6 +77,9 @@ export type ExecutionContext = {
   triggerType: WorkflowTriggerType;
 
   originalEmail?: string;
+  senderEmail?: string;
+  senderName?: string;
+  senderCompany?: string;
   summary?: string;
   meetingTopic?: string;
 

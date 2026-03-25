@@ -7,16 +7,30 @@ import type { WorkflowRunResult } from "@/lib/api/types";
 
 const SAMPLE_EMAIL =
   "Hi Dave, I'd love to talk about a design partner opportunity. I'm free Tuesday afternoon or Thursday morning. Let me know what works best.";
+const SAMPLE_SENDER = "TimCook@apple.com";
+
+function parseSenderEmail(email: string): { name: string; company: string } | null {
+  const atIndex = email.indexOf("@");
+  if (atIndex < 1) return null;
+  const name = email.slice(0, atIndex);
+  const domain = email.slice(atIndex + 1);
+  const company = domain.split(".")[0];
+  if (!name || !company) return null;
+  return { name, company };
+}
 
 export function RunWorkflowCard({ workflowId }: { workflowId: string }) {
   const [emailText, setEmailText] = useState("");
+  const [senderEmail, setSenderEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowRunResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const parsed = parseSenderEmail(senderEmail);
+
   async function handleRun() {
     if (!emailText.trim()) {
-      setError("Email text is required.");
+      setError("Email body is required.");
       return;
     }
     setLoading(true);
@@ -27,7 +41,10 @@ export function RunWorkflowCard({ workflowId }: { workflowId: string }) {
       const res = await fetch(`/api/workflows/${workflowId}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailText: emailText.trim() }),
+        body: JSON.stringify({
+          emailText: emailText.trim(),
+          ...(senderEmail.trim() ? { senderEmail: senderEmail.trim() } : {}),
+        }),
       });
 
       if (!res.ok) {
@@ -53,19 +70,56 @@ export function RunWorkflowCard({ workflowId }: { workflowId: string }) {
 
       <div className="mb-3">
         <div className="flex items-center justify-between mb-1">
-          <label className="text-xs font-medium text-gray-600">Email text</label>
+          <label className="text-xs font-medium text-gray-600">Sender email address</label>
+          <button
+            type="button"
+            onClick={() => setSenderEmail(SAMPLE_SENDER)}
+            className="text-xs text-indigo-600 hover:text-indigo-800"
+          >
+            Load sample
+          </button>
+        </div>
+        <input
+          type="text"
+          className="w-full border border-gray-200 rounded p-2 text-sm text-gray-800 font-mono placeholder-gray-400 focus:outline-none focus:border-gray-400"
+          placeholder="e.g. TimCook@apple.com"
+          value={senderEmail}
+          onChange={(e) => setSenderEmail(e.target.value)}
+          disabled={loading}
+        />
+        {senderEmail && (
+          <div className="mt-1.5 flex gap-4 text-xs text-gray-500">
+            <span>
+              Research person:{" "}
+              <span className={parsed ? "text-gray-800 font-medium" : "text-red-400"}>
+                {parsed ? parsed.name : "—"}
+              </span>
+            </span>
+            <span>
+              Research company:{" "}
+              <span className={parsed ? "text-gray-800 font-medium" : "text-red-400"}>
+                {parsed ? parsed.company : "—"}
+              </span>
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-xs font-medium text-gray-600">Email body</label>
           <button
             type="button"
             onClick={() => setEmailText(SAMPLE_EMAIL)}
             className="text-xs text-indigo-600 hover:text-indigo-800"
           >
-            Load sample email
+            Load sample
           </button>
         </div>
         <textarea
           className="w-full border border-gray-200 rounded p-3 text-sm text-gray-800 font-mono placeholder-gray-400 focus:outline-none focus:border-gray-400 resize-y"
           rows={5}
-          placeholder="Paste scheduling email here..."
+          placeholder="Paste scheduling email body here..."
           value={emailText}
           onChange={(e) => setEmailText(e.target.value)}
           disabled={loading}

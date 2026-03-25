@@ -338,8 +338,17 @@ export async function researchAttendees(input: {
   originalEmail?: string;
   summary?: string;
   attendees?: string[];
+  senderName?: string;
+  senderCompany?: string;
 }): Promise<string> {
-  const context = `Email: ${input.originalEmail ?? ""}\nSummary: ${input.summary ?? ""}\nAttendees: ${(input.attendees ?? []).join(", ")}`;
+  const lines = [
+    `Email: ${input.originalEmail ?? ""}`,
+    `Summary: ${input.summary ?? ""}`,
+    `Attendees: ${(input.attendees ?? []).join(", ")}`,
+  ];
+  if (input.senderName) lines.push(`Sender name: ${input.senderName}`);
+  if (input.senderCompany) lines.push(`Sender company: ${input.senderCompany}`);
+  const context = lines.join("\n");
   try {
     return await askAI(
       "You are a meeting prep assistant. Given a scheduling email, produce concise attendee research notes (2-4 bullet points). Be practical and professional. Note that you do not have live internet access so base your notes on what can be inferred from the email.",
@@ -353,8 +362,16 @@ export async function researchAttendees(input: {
 export async function researchCompany(input: {
   originalEmail?: string;
   summary?: string;
+  senderName?: string;
+  senderCompany?: string;
 }): Promise<string> {
-  const context = `Email: ${input.originalEmail ?? ""}\nSummary: ${input.summary ?? ""}`;
+  const lines = [
+    `Email: ${input.originalEmail ?? ""}`,
+    `Summary: ${input.summary ?? ""}`,
+  ];
+  if (input.senderName) lines.push(`Sender name: ${input.senderName}`);
+  if (input.senderCompany) lines.push(`Sender company: ${input.senderCompany}`);
+  const context = lines.join("\n");
   try {
     return await askAI(
       "You are a meeting prep assistant. Given a scheduling email, produce concise company context notes (2-4 bullet points) based on what can be inferred from the email. Be practical and professional.",

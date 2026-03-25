@@ -6,6 +6,8 @@ export const researchAttendeesHandler: ActionHandler = async ({ context }) => {
     originalEmail: context.originalEmail,
     summary: context.summary,
     attendees: context.attendees,
+    senderName: context.senderName,
+    senderCompany: context.senderCompany,
   });
 
   return {

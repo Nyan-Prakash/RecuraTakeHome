@@ -6,6 +6,7 @@ import type { ExecutionContext, WorkflowTriggerType } from "./types";
 
 export type MeetingRequestPayload = {
   emailText: string;
+  senderEmail?: string;
   source?: string;
 };
 
@@ -36,8 +37,14 @@ function validateMeetingRequestPayload(
     );
   }
 
+  const senderEmail =
+    typeof p["senderEmail"] === "string" && p["senderEmail"].trim() !== ""
+      ? p["senderEmail"].trim()
+      : undefined;
+
   return {
     emailText: p["emailText"].trim(),
+    senderEmail,
     source: typeof p["source"] === "string" ? p["source"] : undefined,
   };
 }
@@ -77,9 +84,21 @@ export function initializeExecutionContext(
   switch (triggerType) {
     case "meeting_request_received": {
       const payload = validateMeetingRequestPayload(triggerPayload);
+
+      let senderName: string | undefined;
+      let senderCompany: string | undefined;
+      if (payload.senderEmail) {
+        const [localPart, domainPart] = payload.senderEmail.split("@");
+        if (localPart) senderName = localPart;
+        if (domainPart) senderCompany = domainPart.split(".")[0];
+      }
+
       return {
         triggerType: "meeting_request_received",
         originalEmail: payload.emailText,
+        senderEmail: payload.senderEmail,
+        senderName,
+        senderCompany,
       };
     }
 
