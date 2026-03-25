@@ -1,0 +1,14 @@
+import type { ActionHandler } from "../types";
+import { researchCompany } from "../../ai/service";
+
+export const researchCompanyHandler: ActionHandler = async ({ context }) => {
+  const companyResearch = await researchCompany({
+    originalEmail: context.originalEmail,
+    summary: context.summary,
+  });
+
+  return {
+    output: { companyResearch },
+    updatedContext: { companyResearch },
+  };
+};
