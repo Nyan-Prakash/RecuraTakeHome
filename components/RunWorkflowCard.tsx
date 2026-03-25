@@ -19,32 +19,51 @@ function parseSenderEmail(email: string): { name: string; company: string } | nu
   return { name, company };
 }
 
-export function RunWorkflowCard({ workflowId }: { workflowId: string }) {
+export function RunWorkflowCard({
+  workflowId,
+  triggerType = "meeting_request_received",
+}: {
+  workflowId: string;
+  triggerType?: string;
+}) {
   const [emailText, setEmailText] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
+  const [eventId, setEventId] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowRunResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const isCancelled = triggerType === "event_cancelled";
   const parsed = parseSenderEmail(senderEmail);
 
   async function handleRun() {
-    if (!emailText.trim()) {
-      setError("Email body is required.");
-      return;
+    if (isCancelled) {
+      if (!eventId.trim()) {
+        setError("Event ID is required.");
+        return;
+      }
+    } else {
+      if (!emailText.trim()) {
+        setError("Email body is required.");
+        return;
+      }
     }
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
+      const body = isCancelled
+        ? { eventId: eventId.trim() }
+        : {
+            emailText: emailText.trim(),
+            ...(senderEmail.trim() ? { senderEmail: senderEmail.trim() } : {}),
+          };
+
       const res = await fetch(`/api/workflows/${workflowId}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          emailText: emailText.trim(),
-          ...(senderEmail.trim() ? { senderEmail: senderEmail.trim() } : {}),
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -68,63 +87,79 @@ export function RunWorkflowCard({ workflowId }: { workflowId: string }) {
         Paste a scheduling email to process it through this workflow.
       </p>
 
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1">
-          <label className="text-xs font-medium text-gray-600">Sender email address</label>
-          <button
-            type="button"
-            onClick={() => setSenderEmail(SAMPLE_SENDER)}
-            className="text-xs text-indigo-600 hover:text-indigo-800"
-          >
-            Load sample
-          </button>
+      {isCancelled ? (
+        <div className="mb-3">
+          <label className="text-xs font-medium text-gray-600 block mb-1">Event ID</label>
+          <input
+            type="text"
+            className="w-full border border-gray-200 rounded p-2 text-sm text-gray-800 font-mono placeholder-gray-400 focus:outline-none focus:border-gray-400"
+            placeholder="e.g. clxyz123..."
+            value={eventId}
+            onChange={(e) => setEventId(e.target.value)}
+            disabled={loading}
+          />
         </div>
-        <input
-          type="text"
-          className="w-full border border-gray-200 rounded p-2 text-sm text-gray-800 font-mono placeholder-gray-400 focus:outline-none focus:border-gray-400"
-          placeholder="e.g. TimCook@apple.com"
-          value={senderEmail}
-          onChange={(e) => setSenderEmail(e.target.value)}
-          disabled={loading}
-        />
-        {senderEmail && (
-          <div className="mt-1.5 flex gap-4 text-xs text-gray-500">
-            <span>
-              Research person:{" "}
-              <span className={parsed ? "text-gray-800 font-medium" : "text-red-400"}>
-                {parsed ? parsed.name : "—"}
-              </span>
-            </span>
-            <span>
-              Research company:{" "}
-              <span className={parsed ? "text-gray-800 font-medium" : "text-red-400"}>
-                {parsed ? parsed.company : "—"}
-              </span>
-            </span>
+      ) : (
+        <>
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-medium text-gray-600">Sender email address</label>
+              <button
+                type="button"
+                onClick={() => setSenderEmail(SAMPLE_SENDER)}
+                className="text-xs text-indigo-600 hover:text-indigo-800"
+              >
+                Load sample
+              </button>
+            </div>
+            <input
+              type="text"
+              className="w-full border border-gray-200 rounded p-2 text-sm text-gray-800 font-mono placeholder-gray-400 focus:outline-none focus:border-gray-400"
+              placeholder="e.g. TimCook@apple.com"
+              value={senderEmail}
+              onChange={(e) => setSenderEmail(e.target.value)}
+              disabled={loading}
+            />
+            {senderEmail && (
+              <div className="mt-1.5 flex gap-4 text-xs text-gray-500">
+                <span>
+                  Research person:{" "}
+                  <span className={parsed ? "text-gray-800 font-medium" : "text-red-400"}>
+                    {parsed ? parsed.name : "—"}
+                  </span>
+                </span>
+                <span>
+                  Research company:{" "}
+                  <span className={parsed ? "text-gray-800 font-medium" : "text-red-400"}>
+                    {parsed ? parsed.company : "—"}
+                  </span>
+                </span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1">
-          <label className="text-xs font-medium text-gray-600">Email body</label>
-          <button
-            type="button"
-            onClick={() => setEmailText(SAMPLE_EMAIL)}
-            className="text-xs text-indigo-600 hover:text-indigo-800"
-          >
-            Load sample
-          </button>
-        </div>
-        <textarea
-          className="w-full border border-gray-200 rounded p-3 text-sm text-gray-800 font-mono placeholder-gray-400 focus:outline-none focus:border-gray-400 resize-y"
-          rows={5}
-          placeholder="Paste scheduling email body here..."
-          value={emailText}
-          onChange={(e) => setEmailText(e.target.value)}
-          disabled={loading}
-        />
-      </div>
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-medium text-gray-600">Email body</label>
+              <button
+                type="button"
+                onClick={() => setEmailText(SAMPLE_EMAIL)}
+                className="text-xs text-indigo-600 hover:text-indigo-800"
+              >
+                Load sample
+              </button>
+            </div>
+            <textarea
+              className="w-full border border-gray-200 rounded p-3 text-sm text-gray-800 font-mono placeholder-gray-400 focus:outline-none focus:border-gray-400 resize-y"
+              rows={5}
+              placeholder="Paste scheduling email body here..."
+              value={emailText}
+              onChange={(e) => setEmailText(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+        </>
+      )}
 
       {error && (
         <p className="mb-3 text-sm text-red-600">{error}</p>

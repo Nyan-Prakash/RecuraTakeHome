@@ -13,6 +13,7 @@
     "demo:reset": "tsx scripts/reset-demo.ts"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@prisma/adapter-better-sqlite3": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "better-sqlite3": "^12.8.0",
