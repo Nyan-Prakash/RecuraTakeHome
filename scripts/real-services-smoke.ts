@@ -39,7 +39,7 @@ async function main() {
     workflowId: meetingWf.id,
     triggerPayload: {
       emailText:
-        "Hi Dave, I'd love to talk about a design partner opportunity. I'm free Tuesday afternoon or Thursday morning. Let me know what works best.",
+        "Hi Mark, I'd love to talk about a design partner opportunity. I'm free Tuesday afternoon or Thursday morning. Let me know what works best.",
     },
   });
 

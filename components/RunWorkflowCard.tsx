@@ -4,7 +4,7 @@ import { useState } from "react";
 import { StreamingExecutionPanel } from "./StreamingExecutionPanel";
 
 const SAMPLE_EMAIL =
-  "Hi Dave, I'd love to talk about a design partner opportunity. I'm free Tuesday afternoon or Thursday morning. Let me know what works best.";
+  "Hi Mark, I'd love to talk about a design partner opportunity. I'm free Tuesday afternoon or Thursday morning. Let me know what works best.";
 const SAMPLE_SENDER = "TimCook@apple.com";
 
 const SAMPLE_CANCELLATION_EMAIL =

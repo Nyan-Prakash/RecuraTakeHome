@@ -201,7 +201,7 @@ The execution context is a shared JavaScript object that every action can read f
 ```
 Initial context (from trigger):
   triggerType: "meeting_request_received"
-  originalEmail: "Hi Dave, I'm free Tuesday afternoon..."
+  originalEmail: "Hi Mark, I'm free Tuesday afternoon..."
   senderEmail: "alex@acme.com"
   senderName: "alex"
   senderCompany: "acme"

@@ -144,7 +144,7 @@ This is the core mechanism that enables optional enrichment actions to be omitte
 A user manually submits an incoming meeting-request email in the UI.
 
 ### Example input
-> Hi Dave, I’d love to talk about a design partner opportunity. I’m free Tuesday afternoon or Thursday morning. Let me know what works best.
+> Hi Mark, I’d love to talk about a design partner opportunity. I’m free Tuesday afternoon or Thursday morning. Let me know what works best.
 
 ### Recommended ordered action chain
 1. `summarize_email`
@@ -202,7 +202,7 @@ This preserves the product concept of incoming email automation while avoiding G
 ### Trigger payload shape
 ```json
 {
-  "emailText": "Hi Dave, I’d love to talk next week. I’m free Tuesday after 2 or Thursday morning.",
+  "emailText": "Hi Mark, I’d love to talk next week. I’m free Tuesday after 2 or Thursday morning.",
   "source": "manual_ui"
 }
 ```
@@ -818,7 +818,7 @@ Runs a workflow.
 ### Example request for meeting request trigger
 ```json
 {
-  "emailText": "Hi Dave, I’d love to chat next week. I’m free Tuesday after 2 or Thursday morning."
+  "emailText": "Hi Mark, I’d love to chat next week. I’m free Tuesday after 2 or Thursday morning."
 }
 ```
 

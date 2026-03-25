@@ -186,7 +186,7 @@ No manual data entry is needed beyond pasting an email into the run form.
 ## Sample email
 
 ```
-Hi Dave, I'd love to talk about a design partner opportunity. I'm free Tuesday afternoon or Thursday morning. Let me know what works best.
+Hi Mark, I'd love to talk about a design partner opportunity. I'm free Tuesday afternoon or Thursday morning. Let me know what works best.
 ```
 
 The **Load sample email** button fills this in automatically. It produces two availability windows (Tuesday afternoon, Thursday morning) which the slot finder resolves against existing calendar events.
