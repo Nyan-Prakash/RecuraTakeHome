@@ -21,9 +21,9 @@ export async function POST(_req: Request, { params }: Params) {
     }
 
     // 3. Find active cancellation workflow
-    const cancellationWorkflow = await getActiveWorkflowByTriggerType("event_cancelled");
+    const cancellationWorkflow = await getActiveWorkflowByTriggerType("meeting_reschedule_requested");
     if (!cancellationWorkflow) {
-      return notFound("No active workflow found for trigger type event_cancelled");
+      return notFound("No active workflow found for trigger type meeting_reschedule_requested");
     }
 
     // 4. Mark event cancelled

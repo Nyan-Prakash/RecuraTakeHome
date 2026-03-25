@@ -18,7 +18,7 @@ const ACTION_LABELS: Record<string, string> = {
   generate_pre_meeting_notes: "Generate Pre-Meeting Notes",
   create_calendar_event: "Create Calendar Event",
   generate_confirmation_email: "Generate Confirmation Email",
-  load_cancelled_event: "Load Cancelled Event",
+  resolve_cancelled_event: "Resolve Cancelled Event",
   find_fallback_slots: "Find Fallback Slots",
   generate_reschedule_email: "Generate Reschedule Email",
 };
@@ -83,7 +83,7 @@ const ACTION_ICONS: Record<string, React.ReactNode> = {
       <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
     </svg>
   ),
-  load_cancelled_event: (
+  resolve_cancelled_event: (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />

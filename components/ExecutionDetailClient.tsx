@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { StatusBadge } from "@/components/StatusBadge";
 import { TriggerBadge } from "@/components/TriggerBadge";
@@ -53,7 +54,7 @@ const ACTION_LABELS: Record<string, string> = {
   generate_pre_meeting_notes: "Generate Pre-Meeting Notes",
   create_calendar_event: "Create Calendar Event",
   generate_confirmation_email: "Generate Confirmation Email",
-  load_cancelled_event: "Load Cancelled Event",
+  resolve_cancelled_event: "Resolve Cancelled Event",
   find_fallback_slots: "Find Fallback Slots",
   generate_reschedule_email: "Generate Reschedule Email",
 };
@@ -438,6 +439,14 @@ const artifactBlockStyle: React.CSSProperties = {
 };
 
 export function ExecutionDetailClient({ execution }: { execution: ExecutionDetailProps }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (execution.status !== "running" && execution.status !== "pending") return;
+    const interval = setInterval(() => router.refresh(), 2000);
+    return () => clearInterval(interval);
+  }, [execution.status, router]);
+
   const { artifacts } = execution;
   const hasArtifacts = Boolean(
     artifacts.selectedSlot ||

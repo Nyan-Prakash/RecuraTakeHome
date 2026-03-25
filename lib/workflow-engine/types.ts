@@ -5,7 +5,7 @@
 
 export type WorkflowTriggerType =
   | "meeting_request_received"
-  | "event_cancelled";
+  | "meeting_reschedule_requested";
 
 export type WorkflowExecutionStatus =
   | "pending"
@@ -29,7 +29,7 @@ export type WorkflowActionType =
   | "generate_pre_meeting_notes"
   | "create_calendar_event"
   | "generate_confirmation_email"
-  | "load_cancelled_event"
+  | "resolve_cancelled_event"
   | "find_fallback_slots"
   | "generate_reschedule_email";
 
@@ -100,7 +100,7 @@ export type ExecutionContext = {
 
   attendees?: string[];
   priorMeetingContext?: string;
-  triggerEventId?: string;  // set from event_cancelled payload, used by load_cancelled_event
+  triggerEventId?: string;  // set from meeting_reschedule_requested payload, used by resolve_cancelled_event
 };
 
 // ---------------------------------------------------------------------------

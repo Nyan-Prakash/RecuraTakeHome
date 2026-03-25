@@ -12,7 +12,7 @@ const prisma = new PrismaClient({ adapter });
 
 const TriggerType = {
   meetingRequestReceived: "meeting_request_received",
-  eventCancelled: "event_cancelled",
+  meetingRescheduleRequested: "meeting_reschedule_requested",
 } as const;
 
 const ActionType = {
@@ -24,7 +24,7 @@ const ActionType = {
   generatePreMeetingNotes: "generate_pre_meeting_notes",
   createCalendarEvent: "create_calendar_event",
   generateConfirmationEmail: "generate_confirmation_email",
-  loadCancelledEvent: "load_cancelled_event",
+  resolveCancelledEvent: "resolve_cancelled_event",
   findFallbackSlots: "find_fallback_slots",
   generateRescheduleEmail: "generate_reschedule_email",
 } as const;
@@ -54,9 +54,9 @@ const workflows = [
     name: "Event Cancellation Handler",
     description:
       "Handles a cancelled event by loading the event, finding fallback slots, and drafting a reschedule email.",
-    triggerType: TriggerType.eventCancelled,
+    triggerType: TriggerType.meetingRescheduleRequested,
     actions: [
-      { type: ActionType.loadCancelledEvent, order: 1, isOptional: false },
+      { type: ActionType.resolveCancelledEvent, order: 1, isOptional: false },
       { type: ActionType.findFallbackSlots, order: 2, isOptional: false },
       { type: ActionType.researchAttendees, order: 3, isOptional: true },
       { type: ActionType.researchCompany, order: 4, isOptional: true },

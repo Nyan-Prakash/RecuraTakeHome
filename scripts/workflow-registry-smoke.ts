@@ -55,8 +55,8 @@ async function main() {
   console.log("  updatedContext keys:", Object.keys(summarizeResult.updatedContext));
   console.log();
 
-  // -- loadCancelledEvent + findFallbackSlots in sequence
-  // Create a temporary event in DB so load_cancelled_event has a real record to fetch
+  // -- resolveCancelledEvent + findFallbackSlots in sequence
+  // Create a temporary event in DB so resolve_cancelled_event has a real record to fetch
   const tempEvent = await prisma.calendarEvent.create({
     data: {
       title: "Registry Smoke Test Event",
@@ -66,18 +66,18 @@ async function main() {
     },
   });
 
-  const loadHandler = getActionHandler("load_cancelled_event");
+  const loadHandler = getActionHandler("resolve_cancelled_event");
   const loadResult = await loadHandler({
-    context: { triggerType: "event_cancelled", triggerEventId: tempEvent.id },
+    context: { triggerType: "meeting_reschedule_requested", triggerEventId: tempEvent.id },
   });
-  console.log("  load_cancelled_event output:", loadResult.output);
+  console.log("  resolve_cancelled_event output:", loadResult.output);
   console.log();
 
   // Clean up temp event
   await prisma.calendarEvent.delete({ where: { id: tempEvent.id } });
 
   const fallbackContext: ExecutionContext = {
-    triggerType: "event_cancelled",
+    triggerType: "meeting_reschedule_requested",
     ...loadResult.updatedContext,
   };
   const fallbackHandler = getActionHandler("find_fallback_slots");

@@ -7,6 +7,10 @@ const SAMPLE_EMAIL =
   "Hi Dave, I'd love to talk about a design partner opportunity. I'm free Tuesday afternoon or Thursday morning. Let me know what works best.";
 const SAMPLE_SENDER = "TimCook@apple.com";
 
+const SAMPLE_CANCELLATION_EMAIL =
+  "Hi, I'm really sorry but I'm going to have to cancel our meeting tomorrow. Something urgent came up at work and I won't be able to make it. I hope we can find another time soon.";
+const SAMPLE_CANCELLATION_SENDER = "john.smith@acme.com";
+
 function parseSenderEmail(email: string): { name: string; company: string } | null {
   const atIndex = email.indexOf("@");
   if (atIndex < 1) return null;
@@ -30,17 +34,23 @@ export function RunWorkflowCard({
 }) {
   const [emailText, setEmailText] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
-  const [eventId, setEventId] = useState("");
+  const [cancellationEmailText, setCancellationEmailText] = useState("");
+  const [cancellationSenderEmail, setCancellationSenderEmail] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [runState, setRunState] = useState<RunState>({ phase: "input" });
 
-  const isCancelled = triggerType === "event_cancelled";
+  const isCancelled = triggerType === "meeting_reschedule_requested";
   const parsed = parseSenderEmail(senderEmail);
+  const parsedCancellation = parseSenderEmail(cancellationSenderEmail);
 
   function handleRun() {
     if (isCancelled) {
-      if (!eventId.trim()) {
-        setValidationError("Event ID is required.");
+      if (!cancellationEmailText.trim()) {
+        setValidationError("Cancellation email body is required.");
+        return;
+      }
+      if (!cancellationSenderEmail.trim()) {
+        setValidationError("Sender email address is required.");
         return;
       }
     } else {
@@ -52,7 +62,10 @@ export function RunWorkflowCard({
     setValidationError(null);
 
     const payload: Record<string, unknown> = isCancelled
-      ? { eventId: eventId.trim() }
+      ? {
+          emailText: cancellationEmailText.trim(),
+          senderEmail: cancellationSenderEmail.trim(),
+        }
       : {
           emailText: emailText.trim(),
           ...(senderEmail.trim() ? { senderEmail: senderEmail.trim() } : {}),
@@ -93,28 +106,97 @@ export function RunWorkflowCard({
               Run Workflow
             </h3>
             <p className="text-xs" style={{ color: "var(--muted)" }}>
-              Paste a scheduling email to process it through this workflow.
+              {isCancelled
+                ? "Paste the cancellation email you received to generate a reschedule response."
+                : "Paste a scheduling email to process it through this workflow."}
             </p>
           </div>
 
           {isCancelled ? (
-            <div className="mb-3">
-              <label
-                className="block text-xs font-medium mb-1.5"
-                style={{ color: "var(--muted)" }}
-              >
-                Event ID
-              </label>
-              <input
-                type="text"
-                style={inputStyle}
-                placeholder="e.g. clxyz123..."
-                value={eventId}
-                onChange={(e) => setEventId(e.target.value)}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-              />
-            </div>
+            <>
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>
+                    Sender email address
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setCancellationSenderEmail(SAMPLE_CANCELLATION_SENDER)}
+                    className="text-xs font-medium transition-colors cursor-pointer"
+                    style={{ color: "var(--accent)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-hover)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                  >
+                    Load sample
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  style={{ ...inputStyle, fontFamily: "ui-monospace, monospace" }}
+                  placeholder="e.g. john.smith@acme.com"
+                  value={cancellationSenderEmail}
+                  onChange={(e) => setCancellationSenderEmail(e.target.value)}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+                />
+                {cancellationSenderEmail && (
+                  <div
+                    className="mt-2 flex gap-4 text-xs rounded-lg px-3 py-2"
+                    style={{ background: "var(--border-subtle)", color: "var(--muted)" }}
+                  >
+                    <span>
+                      Person:{" "}
+                      <span
+                        className="font-medium"
+                        style={{ color: parsedCancellation ? "var(--foreground)" : "var(--error)" }}
+                      >
+                        {parsedCancellation ? parsedCancellation.name : "—"}
+                      </span>
+                    </span>
+                    <span>
+                      Company:{" "}
+                      <span
+                        className="font-medium"
+                        style={{ color: parsedCancellation ? "var(--foreground)" : "var(--error)" }}
+                      >
+                        {parsedCancellation ? parsedCancellation.company : "—"}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>
+                    Cancellation email body
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setCancellationEmailText(SAMPLE_CANCELLATION_EMAIL)}
+                    className="text-xs font-medium transition-colors cursor-pointer"
+                    style={{ color: "var(--accent)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-hover)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                  >
+                    Load sample
+                  </button>
+                </div>
+                <textarea
+                  style={{
+                    ...inputStyle,
+                    fontFamily: "ui-monospace, monospace",
+                    resize: "vertical",
+                    minHeight: "100px",
+                  }}
+                  rows={5}
+                  placeholder="Paste the cancellation email they sent you..."
+                  value={cancellationEmailText}
+                  onChange={(e) => setCancellationEmailText(e.target.value)}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+                />
+              </div>
+            </>
           ) : (
             <>
               <div className="mb-3">

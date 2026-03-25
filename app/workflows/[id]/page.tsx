@@ -18,7 +18,7 @@ const ACTION_LABELS: Record<string, string> = {
   generate_pre_meeting_notes: "Generate Pre-Meeting Notes",
   create_calendar_event: "Create Calendar Event",
   generate_confirmation_email: "Generate Confirmation Email",
-  load_cancelled_event: "Load Cancelled Event",
+  resolve_cancelled_event: "Resolve Cancelled Event",
   find_fallback_slots: "Find Fallback Slots",
   generate_reschedule_email: "Generate Reschedule Email",
 };
@@ -146,24 +146,8 @@ export default async function WorkflowDetailPage({ params }: Props) {
       </div>
 
       {/* Run section */}
-      {workflow.triggerType === "meeting_request_received" ? (
-        <RunWorkflowCard workflowId={workflow.id} />
-      ) : (
-        <div
-          className="rounded-xl p-5 border"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <h3 className="font-medium text-sm mb-1" style={{ color: "var(--foreground)" }}>
-            Manual Execution
-          </h3>
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
-            This workflow is triggered from the{" "}
-            <Link href="/calendar" className="hover-link-accent font-medium">
-              Calendar page
-            </Link>{" "}
-            when an event is cancelled.
-          </p>
-        </div>
+      {(workflow.triggerType === "meeting_request_received" || workflow.triggerType === "meeting_reschedule_requested") && (
+        <RunWorkflowCard workflowId={workflow.id} triggerType={workflow.triggerType} />
       )}
     </div>
   );

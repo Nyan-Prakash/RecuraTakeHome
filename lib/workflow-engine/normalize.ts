@@ -11,7 +11,7 @@ import type {
 
 const WORKFLOW_TRIGGER_TYPES: WorkflowTriggerType[] = [
   "meeting_request_received",
-  "event_cancelled",
+  "meeting_reschedule_requested",
 ];
 
 const WORKFLOW_ACTION_TYPES: WorkflowActionType[] = [
@@ -23,7 +23,7 @@ const WORKFLOW_ACTION_TYPES: WorkflowActionType[] = [
   "generate_pre_meeting_notes",
   "create_calendar_event",
   "generate_confirmation_email",
-  "load_cancelled_event",
+  "resolve_cancelled_event",
   "find_fallback_slots",
   "generate_reschedule_email",
 ];

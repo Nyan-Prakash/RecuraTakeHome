@@ -5,7 +5,7 @@ import { RunWorkflowCard } from "./RunWorkflowCard";
 
 const TRIGGER_LABELS: Record<string, string> = {
   meeting_request_received: "Meeting Request Received",
-  event_cancelled: "Event Cancelled",
+  meeting_reschedule_requested: "Reschedule Requested",
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -17,7 +17,7 @@ const ACTION_LABELS: Record<string, string> = {
   generate_pre_meeting_notes: "Generate Pre-Meeting Notes",
   create_calendar_event: "Create Calendar Event",
   generate_confirmation_email: "Generate Confirmation Email",
-  load_cancelled_event: "Load Cancelled Event",
+  resolve_cancelled_event: "Resolve Cancelled Event",
   find_fallback_slots: "Find Fallback Slots",
   generate_reschedule_email: "Generate Reschedule Email",
 };

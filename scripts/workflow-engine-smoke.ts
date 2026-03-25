@@ -41,7 +41,7 @@ async function main() {
     (w) => w.triggerType === "meeting_request_received"
   );
   const cancellationWorkflow = workflows.find(
-    (w) => w.triggerType === "event_cancelled"
+    (w) => w.triggerType === "meeting_reschedule_requested"
   );
 
   if (!meetingWorkflow) throw new Error("Meeting Request Processor not found in DB");

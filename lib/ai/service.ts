@@ -255,10 +255,13 @@ function fallbackConfirmationEmail(input: {
 }
 
 function fallbackRescheduleEmail(input: {
-  cancelledEvent: CancelledEvent;
+  cancelledEvent?: CancelledEvent;
   fallbackSlots: FallbackSlot[];
+  cancellationEmailBody?: string;
+  senderName?: string;
+  summary?: string;
 }): string {
-  const { cancelledEvent, fallbackSlots } = input;
+  const { fallbackSlots } = input;
   const slotLines = fallbackSlots.map((s, i) => {
     const d = new Date(s.startTime);
     const dateStr = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
@@ -266,15 +269,22 @@ function fallbackRescheduleEmail(input: {
     return `  Option ${i + 1}: ${dateStr} at ${timeStr}`;
   }).join("\n");
 
+  const greeting = input.senderName ? `Hi ${input.senderName},` : "Hi,";
+  const contextLine = input.summary
+    ? `I understand — ${input.summary.charAt(0).toLowerCase()}${input.summary.slice(1)}`
+    : input.cancellationEmailBody
+    ? "Thanks for letting me know."
+    : `I wanted to reach out regarding our meeting${input.cancelledEvent ? ` "${input.cancelledEvent.title}"` : ""} that was recently cancelled.`;
+
   return [
-    "Hi,",
+    greeting,
     "",
-    `I wanted to reach out regarding our meeting "${cancelledEvent.title}" that was recently cancelled.`,
+    contextLine,
     "",
-    "I'd love to find a new time to connect. Here are a few options that work for me:",
+    "I'd still love to find a time to connect. Here are a few slots that work for me:",
     slotLines,
     "",
-    "Please let me know which time works best for you, or suggest an alternative.",
+    "Please let me know which works best, or feel free to suggest another time.",
     "",
     "Best,",
     "[Your Name]",
@@ -423,26 +433,66 @@ export async function generateConfirmationEmail(input: {
   }
 }
 
+export async function extractMeetingReference(emailText: string): Promise<{ title?: string; dateHint?: string }> {
+  try {
+    const raw = await askAI(
+      `You are an assistant that extracts meeting references from cancellation emails.
+Return ONLY a JSON object with these fields:
+- title: string or null — the meeting name/topic mentioned (e.g. "design review", "catch-up call")
+- dateHint: string or null — any date or time hint mentioned (e.g. "tomorrow", "Monday", "next week")
+Return only the JSON object, no other text.`,
+      `Email:\n${emailText}`
+    );
+    const parsed = JSON.parse(raw.replace(/```json\n?|\n?```/g, "").trim()) as { title?: string; dateHint?: string };
+    return { title: parsed.title ?? undefined, dateHint: parsed.dateHint ?? undefined };
+  } catch {
+    // Fallback: try a naive keyword extraction
+    const titleMatch = emailText.match(/(?:meeting|call|sync|review|catch[-\s]?up|discussion)[^.!?\n]*/i);
+    return { title: titleMatch?.[0]?.trim() };
+  }
+}
+
 export async function generateRescheduleEmail(input: {
-  cancelledEvent: CancelledEvent;
+  cancelledEvent?: CancelledEvent;
   fallbackSlots: FallbackSlot[];
+  cancellationEmailBody?: string;
+  senderEmail?: string;
+  senderName?: string;
+  summary?: string;
   attendeeResearch?: string;
   companyResearch?: string;
 }): Promise<string> {
   const slotsText = input.fallbackSlots
-    .map((s, i) => `Option ${i + 1}: ${s.startTime} to ${s.endTime}`)
+    .map((s, i) => {
+      const d = new Date(s.startTime);
+      const dateStr = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+      const timeStr = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+      return `Option ${i + 1}: ${dateStr} at ${timeStr}`;
+    })
     .join("\n");
 
-  const context = [
-    `Cancelled meeting: "${input.cancelledEvent.title}"`,
-    `Original time: ${input.cancelledEvent.startTime} to ${input.cancelledEvent.endTime}`,
-    `Available fallback slots:\n${slotsText}`,
-  ].join("\n");
+  const contextParts = [
+    input.cancellationEmailBody
+      ? `Their cancellation message:\n"${input.cancellationEmailBody}"`
+      : null,
+    input.summary ? `Summary of their message: ${input.summary}` : null,
+    input.senderName ? `Their name (from email): ${input.senderName}` : null,
+    input.cancelledEvent
+      ? `Original meeting: "${input.cancelledEvent.title}" on ${input.cancelledEvent.startTime}`
+      : null,
+    `Your available times to reschedule:\n${slotsText}`,
+  ].filter(Boolean).join("\n\n");
 
   try {
     return await askAI(
-      "You are an assistant that drafts professional meeting reschedule emails. Write a brief, friendly reschedule request (4-6 sentences) presenting the fallback options. Do not include subject line.",
-      context
+      `You are an assistant that drafts professional, warm reschedule emails.
+The person sent you a cancellation message. Write a brief reply (4-6 sentences) that:
+1. Acknowledges their reason for cancelling (use their words if a reason was given)
+2. Expresses you still want to meet
+3. Proposes the available times listed
+4. Closes warmly
+Address them by first name if available. Do not include a subject line.`,
+      contextParts
     );
   } catch {
     return fallbackRescheduleEmail(input);

@@ -8,7 +8,7 @@ import { researchCompanyHandler } from "./actions/researchCompany";
 import { generatePreMeetingNotesHandler } from "./actions/generatePreMeetingNotes";
 import { createCalendarEventHandler } from "./actions/createCalendarEvent";
 import { generateConfirmationEmailHandler } from "./actions/generateConfirmationEmail";
-import { loadCancelledEventHandler } from "./actions/loadCancelledEvent";
+import { resolveCancelledEventHandler } from "./actions/resolveCancelledEvent";
 import { findFallbackSlotsHandler } from "./actions/findFallbackSlots";
 import { generateRescheduleEmailHandler } from "./actions/generateRescheduleEmail";
 
@@ -21,7 +21,7 @@ export const actionRegistry: ActionRegistry = {
   generate_pre_meeting_notes: generatePreMeetingNotesHandler,
   create_calendar_event: createCalendarEventHandler,
   generate_confirmation_email: generateConfirmationEmailHandler,
-  load_cancelled_event: loadCancelledEventHandler,
+  resolve_cancelled_event: resolveCancelledEventHandler,
   find_fallback_slots: findFallbackSlotsHandler,
   generate_reschedule_email: generateRescheduleEmailHandler,
 };

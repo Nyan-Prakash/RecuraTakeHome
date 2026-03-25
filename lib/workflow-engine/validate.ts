@@ -67,8 +67,8 @@ export function validateWorkflowForExecution(
     assertBefore("create_calendar_event", "generate_confirmation_email");
   }
 
-  if (workflow.triggerType === "event_cancelled") {
-    assertBefore("load_cancelled_event", "find_fallback_slots");
+  if (workflow.triggerType === "meeting_reschedule_requested") {
+    assertBefore("resolve_cancelled_event", "find_fallback_slots");
     assertBefore("find_fallback_slots", "generate_reschedule_email");
   }
 }

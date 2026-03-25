@@ -27,7 +27,7 @@ async function main() {
 
   const workflows = await getAllWorkflows();
   const meetingWf = workflows.find((w) => w.triggerType === "meeting_request_received");
-  const cancelWf = workflows.find((w) => w.triggerType === "event_cancelled");
+  const cancelWf = workflows.find((w) => w.triggerType === "meeting_reschedule_requested");
   if (!meetingWf) throw new Error("Meeting workflow not found");
   if (!cancelWf) throw new Error("Cancellation workflow not found");
 

@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="font-semibold text-sm"
               style={{ color: "var(--foreground)", letterSpacing: "-0.01em" }}
             >
-              Recura
+              Workaholic+
             </span>
           </Link>
 

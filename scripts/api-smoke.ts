@@ -102,8 +102,8 @@ async function main() {
   pass(`created test event: ${testEvent.id}`);
 
   // Find cancellation workflow
-  const cancellationWorkflow = await getActiveWorkflowByTriggerType("event_cancelled").catch((e) => fail("getActiveWorkflowByTriggerType", e));
-  if (!cancellationWorkflow) throw new Error("No active event_cancelled workflow found");
+  const cancellationWorkflow = await getActiveWorkflowByTriggerType("meeting_reschedule_requested").catch((e) => fail("getActiveWorkflowByTriggerType", e));
+  if (!cancellationWorkflow) throw new Error("No active meeting_reschedule_requested workflow found");
   pass(`found cancellation workflow: "${cancellationWorkflow.name}"`);
 
   // Cancel event + execute workflow

@@ -11,8 +11,8 @@ export type MeetingRequestPayload = {
 };
 
 export type EventCancelledPayload = {
-  eventId: string;
-  reason?: string;
+  emailText: string;
+  senderEmail: string;
   source?: string;
 };
 
@@ -53,18 +53,22 @@ function validateEventCancelledPayload(
   payload: unknown
 ): EventCancelledPayload {
   if (typeof payload !== "object" || payload === null) {
-    throw new Error("event_cancelled: payload must be an object");
+    throw new Error("meeting_reschedule_requested: payload must be an object");
   }
 
   const p = payload as Record<string, unknown>;
 
-  if (typeof p["eventId"] !== "string" || p["eventId"].trim() === "") {
-    throw new Error("event_cancelled: eventId must be a non-empty string");
+  if (typeof p["emailText"] !== "string" || p["emailText"].trim() === "") {
+    throw new Error("meeting_reschedule_requested: emailText must be a non-empty string");
+  }
+
+  if (typeof p["senderEmail"] !== "string" || p["senderEmail"].trim() === "") {
+    throw new Error("meeting_reschedule_requested: senderEmail must be a non-empty string");
   }
 
   return {
-    eventId: p["eventId"].trim(),
-    reason: typeof p["reason"] === "string" ? p["reason"] : undefined,
+    emailText: p["emailText"].trim(),
+    senderEmail: p["senderEmail"].trim(),
     source: typeof p["source"] === "string" ? p["source"] : undefined,
   };
 }
@@ -102,11 +106,21 @@ export function initializeExecutionContext(
       };
     }
 
-    case "event_cancelled": {
+    case "meeting_reschedule_requested": {
       const payload = validateEventCancelledPayload(triggerPayload);
+
+      let senderName: string | undefined;
+      let senderCompany: string | undefined;
+      const [localPart, domainPart] = payload.senderEmail.split("@");
+      if (localPart) senderName = localPart;
+      if (domainPart) senderCompany = domainPart.split(".")[0];
+
       return {
-        triggerType: "event_cancelled",
-        triggerEventId: payload.eventId,
+        triggerType: "meeting_reschedule_requested",
+        originalEmail: payload.emailText,
+        senderEmail: payload.senderEmail,
+        senderName,
+        senderCompany,
       };
     }
 

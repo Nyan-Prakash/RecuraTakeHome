@@ -218,6 +218,85 @@ export async function loadCancelledEvent(eventId: string): Promise<{
 }
 
 // ---------------------------------------------------------------------------
+// findEventBySenderEmail
+// ---------------------------------------------------------------------------
+
+export async function findEventBySenderEmail(args: {
+  senderEmail: string;
+  senderCompany?: string;
+  emailBody?: string;
+}): Promise<{
+  cancelledEvent: CancelledEvent;
+  attendees?: string[];
+  priorMeetingContext?: string;
+} | null> {
+  // Pull all future + recent scheduled events, most imminent first
+  const now = new Date();
+  const lookback = new Date(now);
+  lookback.setDate(lookback.getDate() - 7); // include events up to 7 days ago
+
+  const events = await prisma.calendarEvent.findMany({
+    where: {
+      status: "scheduled",
+      startTime: { gte: lookback },
+    },
+    orderBy: { startTime: "asc" },
+  });
+
+  if (events.length === 0) return null;
+
+  // Score each event: match on senderCompany in title/summary/research, then pick closest
+  const senderName = args.senderEmail.split("@")[0]?.toLowerCase() ?? "";
+  const company = args.senderCompany?.toLowerCase() ?? "";
+  const bodyLower = (args.emailBody ?? "").toLowerCase();
+
+  let bestEvent = events[0]!;
+  let bestScore = -1;
+
+  for (const event of events) {
+    let score = 0;
+    const haystack = [
+      event.title,
+      event.meetingSummary ?? "",
+      event.attendeeResearch ?? "",
+      event.companyResearch ?? "",
+      event.description ?? "",
+    ].join(" ").toLowerCase();
+
+    if (company && haystack.includes(company)) score += 3;
+    if (senderName && haystack.includes(senderName)) score += 2;
+
+    // Check if any words from the email body appear in the event
+    const bodyWords = bodyLower.split(/\s+/).filter((w) => w.length > 4);
+    for (const word of bodyWords) {
+      if (haystack.includes(word)) score += 1;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestEvent = event;
+    }
+  }
+
+  const cancelledEvent: CancelledEvent = {
+    id: bestEvent.id,
+    title: bestEvent.title,
+    startTime: bestEvent.startTime.toISOString(),
+    endTime: bestEvent.endTime.toISOString(),
+    description: bestEvent.description ?? undefined,
+  };
+
+  const contextParts: string[] = [];
+  if (bestEvent.meetingSummary) contextParts.push(`Meeting summary: ${bestEvent.meetingSummary}`);
+  if (bestEvent.preMeetingNotes) contextParts.push(`Pre-meeting notes: ${bestEvent.preMeetingNotes}`);
+
+  return {
+    cancelledEvent,
+    priorMeetingContext: contextParts.length > 0 ? contextParts.join("\n") : undefined,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // findFallbackSlots
 // ---------------------------------------------------------------------------
 

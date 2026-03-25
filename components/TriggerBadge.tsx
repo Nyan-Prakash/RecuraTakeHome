@@ -1,6 +1,6 @@
 const LABELS: Record<string, string> = {
   meeting_request_received: "Meeting Request",
-  event_cancelled: "Event Cancelled",
+  meeting_reschedule_requested: "Reschedule Requested",
 };
 
 const STYLES: Record<string, { bg: string; color: string; border: string }> = {
@@ -9,7 +9,7 @@ const STYLES: Record<string, { bg: string; color: string; border: string }> = {
     color: "#3730a3",
     border: "#c7d2fe",
   },
-  event_cancelled: {
+  meeting_reschedule_requested: {
     bg: "#fff7ed",
     color: "#9a3412",
     border: "#fed7aa",

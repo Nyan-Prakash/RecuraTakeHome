@@ -45,7 +45,7 @@ export async function POST(req: Request, { params }: Params) {
         emit({
           type: "workflow_complete",
           status: "failed",
-          context: { triggerType: workflow.triggerType as "meeting_request_received" | "event_cancelled" },
+          context: { triggerType: workflow.triggerType as "meeting_request_received" | "meeting_reschedule_requested" },
           errorMessage: message,
         });
       } finally {
