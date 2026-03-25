@@ -148,6 +148,7 @@ export async function findOpenSlot(args: {
 export async function createCalendarEvent(args: {
   selectedSlot: SelectedSlot;
   summary?: string;
+  attendeeEmail?: string;
   attendeeResearch?: string;
   companyResearch?: string;
   preMeetingNotes?: string;
@@ -166,6 +167,7 @@ export async function createCalendarEvent(args: {
     startTime: new Date(args.selectedSlot.startTime),
     endTime: new Date(args.selectedSlot.endTime),
     meetingSummary: args.summary,
+    attendeeEmail: args.attendeeEmail,
     attendeeResearch: args.attendeeResearch,
     companyResearch: args.companyResearch,
     preMeetingNotes: args.preMeetingNotes,
@@ -178,42 +180,6 @@ export async function createCalendarEvent(args: {
     startTime: event.startTime.toISOString(),
     endTime: event.endTime.toISOString(),
     description: event.description ?? "",
-  };
-}
-
-// ---------------------------------------------------------------------------
-// loadCancelledEvent
-// ---------------------------------------------------------------------------
-
-export async function loadCancelledEvent(eventId: string): Promise<{
-  cancelledEvent: CancelledEvent;
-  attendees?: string[];
-  priorMeetingContext?: string;
-}> {
-  const event = await prisma.calendarEvent.findUnique({
-    where: { id: eventId },
-  });
-
-  if (!event) {
-    throw new Error(`loadCancelledEvent: event not found for id "${eventId}"`);
-  }
-
-  const cancelledEvent: CancelledEvent = {
-    id: event.id,
-    title: event.title,
-    startTime: event.startTime.toISOString(),
-    endTime: event.endTime.toISOString(),
-    description: event.description ?? undefined,
-  };
-
-  // Build lightweight prior context from stored enrichment fields
-  const contextParts: string[] = [];
-  if (event.meetingSummary) contextParts.push(`Meeting summary: ${event.meetingSummary}`);
-  if (event.preMeetingNotes) contextParts.push(`Pre-meeting notes: ${event.preMeetingNotes}`);
-
-  return {
-    cancelledEvent,
-    priorMeetingContext: contextParts.length > 0 ? contextParts.join("\n") : undefined,
   };
 }
 
@@ -237,46 +203,16 @@ export async function findEventBySenderEmail(args: {
 
   const events = await prisma.calendarEvent.findMany({
     where: {
-      status: "scheduled",
+      status: { in: ["scheduled", "cancelled"] },
       startTime: { gte: lookback },
+      attendeeEmail: args.senderEmail.toLowerCase(),
     },
     orderBy: { startTime: "asc" },
   });
 
   if (events.length === 0) return null;
 
-  // Score each event: match on senderCompany in title/summary/research, then pick closest
-  const senderName = args.senderEmail.split("@")[0]?.toLowerCase() ?? "";
-  const company = args.senderCompany?.toLowerCase() ?? "";
-  const bodyLower = (args.emailBody ?? "").toLowerCase();
-
-  let bestEvent = events[0]!;
-  let bestScore = -1;
-
-  for (const event of events) {
-    let score = 0;
-    const haystack = [
-      event.title,
-      event.meetingSummary ?? "",
-      event.attendeeResearch ?? "",
-      event.companyResearch ?? "",
-      event.description ?? "",
-    ].join(" ").toLowerCase();
-
-    if (company && haystack.includes(company)) score += 3;
-    if (senderName && haystack.includes(senderName)) score += 2;
-
-    // Check if any words from the email body appear in the event
-    const bodyWords = bodyLower.split(/\s+/).filter((w) => w.length > 4);
-    for (const word of bodyWords) {
-      if (haystack.includes(word)) score += 1;
-    }
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestEvent = event;
-    }
-  }
+  const bestEvent = events[0]!;
 
   const cancelledEvent: CancelledEvent = {
     id: bestEvent.id,

@@ -97,6 +97,7 @@ model CalendarEvent {
   endTime                   DateTime
   status                    String    @default("scheduled")
   meetingSummary            String?
+  attendeeEmail             String?
   attendeeResearch          String?
   companyResearch           String?
   preMeetingNotes           String?

@@ -1,25 +1,12 @@
 import type { ActionHandler } from "../types";
-import { loadCancelledEvent, findEventBySenderEmail } from "../../calendar/service";
+import { findEventBySenderEmail } from "../../calendar/service";
 import { cancelCalendarEvent } from "../../db/calendarEvents";
 
 export const resolveCancelledEventHandler: ActionHandler = async ({ context }) => {
-  // If we already have an explicit eventId (calendar-button trigger), use it directly
-  if (context.triggerEventId) {
-    const result = await loadCancelledEvent(context.triggerEventId);
-    return {
-      output: result,
-      updatedContext: {
-        cancelledEvent: result.cancelledEvent,
-        attendees: result.attendees,
-        priorMeetingContext: result.priorMeetingContext,
-      },
-    };
-  }
-
   // Email-driven trigger — find the scheduled event linked to the sender
   if (!context.senderEmail) {
     throw new Error(
-      "resolveCancelledEventHandler: senderEmail is required when no triggerEventId is provided"
+      "resolveCancelledEventHandler: senderEmail is required"
     );
   }
 

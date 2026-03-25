@@ -698,6 +698,7 @@ export function StreamingExecutionPanel({
     setErrorMessage(null);
 
     (async () => {
+
       let res: Response;
       try {
         res = await fetch(`/api/workflows/${workflowId}/stream`, {

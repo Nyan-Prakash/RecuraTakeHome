@@ -169,3 +169,18 @@ Browser
 9. **3:25** — Open `components/StreamingExecutionPanel.tsx`, show EventSource + step rendering
 10. **3:40** — Switch to a text slide / README for the production gaps summary
 11. **4:30** — End on running app demo (browser showing a workflow execution completing in real time)
+
+
+
+4. ExecutionContext is a single mutable blob with no access control between steps
+types.ts:76 — every action handler receives the entire ExecutionContext and can write any field back via updatedContext. There's no enforcement that summarize_email only writes summary/meetingTopic, not createdEventId.
+
+Fix: Make the handler contract strongly typed per action — each handler declares its input shape and its output shape, both validated. The engine merges only the declared output fields back into context. This prevents a buggy handler from silently clobbering a field that a later handler depends on, which is very hard to debug in prod.
+
+2. No retry or idempotency on action handlers
+Current state. If researchAttendees fails mid-workflow (engine.ts:155-185), the whole execution is marked failed and stopped. There's no way to retry from that step. Rerunning the whole workflow re-executes everything from scratch — including create_calendar_event, which would create a duplicate.
+
+Fix: Two things:
+
+Per-step retry with backoff on transient failures (network, rate limit). The handler contract already returns output separately from updatedContext — a retry loop wrapping the handler call is clean.
+Idempotency keys on side-effectful actions (create_calendar_event, email sends). The StepExecution row already has an ID — pass it as an idempotency key to downstream APIs so a retry doesn't double-create.

@@ -100,7 +100,7 @@ export type ExecutionContext = {
 
   attendees?: string[];
   priorMeetingContext?: string;
-  triggerEventId?: string;  // set from meeting_reschedule_requested payload, used by resolve_cancelled_event
+  triggerEventId?: string;  // set by resolve_cancelled_event after email-driven match
 };
 
 // ---------------------------------------------------------------------------

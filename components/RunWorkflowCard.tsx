@@ -58,6 +58,10 @@ export function RunWorkflowCard({
         setValidationError("Email body is required.");
         return;
       }
+      if (!senderEmail.trim()) {
+        setValidationError("Sender email address is required.");
+        return;
+      }
     }
     setValidationError(null);
 
@@ -68,7 +72,7 @@ export function RunWorkflowCard({
         }
       : {
           emailText: emailText.trim(),
-          ...(senderEmail.trim() ? { senderEmail: senderEmail.trim() } : {}),
+          senderEmail: senderEmail.trim(),
         };
 
     setRunState({ phase: "streaming", payload });

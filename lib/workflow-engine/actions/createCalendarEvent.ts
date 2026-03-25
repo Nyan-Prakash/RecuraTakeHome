@@ -12,6 +12,7 @@ export const createCalendarEventHandler: ActionHandler = async ({
   const createdEvent = await createCalendarEvent({
     selectedSlot: context.selectedSlot,
     summary: context.summary,
+    attendeeEmail: context.senderEmail?.toLowerCase(),
     attendeeResearch: context.attendeeResearch,
     companyResearch: context.companyResearch,
     preMeetingNotes: context.preMeetingNotes,

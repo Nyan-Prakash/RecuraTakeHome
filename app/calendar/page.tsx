@@ -4,13 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { StatusBadge } from "@/components/StatusBadge";
 import { EmptyState } from "@/components/EmptyState";
-import { CancelEventButton } from "@/components/CancelEventButton";
-import type { CalendarEventItem, WorkflowRunResult } from "@/lib/api/types";
-
-type CancelResult = {
-  event: CalendarEventItem;
-  execution: WorkflowRunResult;
-};
+import type { CalendarEventItem } from "@/lib/api/types";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = [
@@ -142,11 +136,9 @@ function EventChip({
 function EventDetailModal({
   event,
   onClose,
-  onCancelled,
 }: {
   event: CalendarEventItem;
   onClose: () => void;
-  onCancelled: (result: CancelResult) => void;
 }) {
   return (
     <>
@@ -329,23 +321,6 @@ function EventDetailModal({
           </div>
         )}
 
-        {/* Cancel button */}
-        {event.status === "scheduled" && (
-          <div
-            style={{
-              borderTop: "1px solid var(--border)",
-              paddingTop: "14px",
-            }}
-          >
-            <CancelEventButton
-              eventId={event.id}
-              onCancelled={(result) => {
-                onCancelled(result);
-                onClose();
-              }}
-            />
-          </div>
-        )}
       </div>
     </>
   );
@@ -356,7 +331,6 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastCancelResult, setLastCancelResult] = useState<CancelResult | null>(null);
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventItem | null>(null);
@@ -379,13 +353,6 @@ export default function CalendarPage() {
   useEffect(() => {
     void loadEvents();
   }, []);
-
-  function handleCancelled(result: CancelResult) {
-    setLastCancelResult(result);
-    setEvents((prev) =>
-      prev.map((e) => (e.id === result.event.id ? { ...e, status: "cancelled" } : e))
-    );
-  }
 
   // Build O(1) lookup map: "YYYY-MM-DD" -> events[]
   const eventsByDate = useMemo(() => {
@@ -466,53 +433,6 @@ export default function CalendarPage() {
           Refresh
         </button>
       </div>
-
-      {/* Cancel result banner */}
-      {lastCancelResult && (
-        <div
-          className="mb-5 rounded-xl p-4 border"
-          style={{
-            background: "var(--warning-subtle)",
-            borderColor: "#fde68a",
-          }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium" style={{ color: "#92400e" }}>
-              Event cancelled — Event Cancellation Handler triggered
-            </p>
-            <button
-              type="button"
-              onClick={() => setLastCancelResult(null)}
-              className="text-xs transition-colors cursor-pointer"
-              style={{ color: "#d97706" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#92400e")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#d97706")}
-            >
-              Dismiss
-            </button>
-          </div>
-          <div className="flex items-center gap-3">
-            <StatusBadge status={lastCancelResult.execution.status} />
-            <span className="text-xs" style={{ color: "#a16207" }}>
-              {lastCancelResult.execution.steps.length} steps run
-            </span>
-            <Link
-              href={`/executions/${lastCancelResult.execution.workflowExecutionId}`}
-              className="text-xs font-medium transition-colors"
-              style={{ color: "var(--accent)", textDecoration: "none" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-hover)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--accent)")}
-            >
-              View execution →
-            </Link>
-          </div>
-          {lastCancelResult.execution.errorMessage && (
-            <p className="mt-1 text-xs" style={{ color: "var(--error)" }}>
-              {lastCancelResult.execution.errorMessage}
-            </p>
-          )}
-        </div>
-      )}
 
       {/* Loading */}
       {loading && (
@@ -782,10 +702,6 @@ export default function CalendarPage() {
         <EventDetailModal
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
-          onCancelled={(result) => {
-            handleCancelled(result);
-            setSelectedEvent(null);
-          }}
         />
       )}
     </div>

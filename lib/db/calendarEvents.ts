@@ -20,7 +20,7 @@ export async function cancelCalendarEvent(id: string) {
   }
 
   if (event.status === "cancelled") {
-    throw new Error(`Calendar event is already cancelled: ${id}`);
+    return event;
   }
 
   return prisma.calendarEvent.update({
@@ -35,6 +35,7 @@ export async function createCalendarEvent(args: {
   startTime: Date;
   endTime: Date;
   meetingSummary?: string;
+  attendeeEmail?: string;
   attendeeResearch?: string;
   companyResearch?: string;
   preMeetingNotes?: string;
@@ -48,6 +49,7 @@ export async function createCalendarEvent(args: {
       endTime: args.endTime,
       status: "scheduled",
       meetingSummary: args.meetingSummary,
+      attendeeEmail: args.attendeeEmail,
       attendeeResearch: args.attendeeResearch,
       companyResearch: args.companyResearch,
       preMeetingNotes: args.preMeetingNotes,

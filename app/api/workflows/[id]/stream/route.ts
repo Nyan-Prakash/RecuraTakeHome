@@ -33,6 +33,13 @@ export async function POST(req: Request, { params }: Params) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      // If the client already disconnected (e.g. React StrictMode double-invoke),
+      // don't start the workflow at all.
+      if (req.signal.aborted) {
+        controller.close();
+        return;
+      }
+
       function emit(event: WorkflowStreamEvent) {
         controller.enqueue(encoder.encode(encodeSSE(event)));
       }
