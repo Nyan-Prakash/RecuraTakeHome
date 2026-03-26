@@ -8,7 +8,7 @@ const SAMPLE_EMAIL =
 const SAMPLE_SENDER = "TimCook@apple.com";
 
 const SAMPLE_CANCELLATION_EMAIL =
-  "Hi, I'm really sorry but I'm going to have to cancel our meeting tomorrow. Something urgent came up at work and I won't be able to make it. I hope we can find another time soon.";
+  "Hi, I'm really sorry but I'm going to have to cancel our meeting. Something urgent came up at work and I won't be able to make it. I hope we can find another time soon.";
 const SAMPLE_CANCELLATION_SENDER = "john.smith@acme.com";
 
 function parseSenderEmail(email: string): { name: string; company: string } | null {
