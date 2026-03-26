@@ -15,6 +15,13 @@ npm run db:seed
 npm run dev
 ```
 
+Create a `.env` file in the project root:
+
+```
+DATABASE_URL="file:./dev.db"
+OPENAI_API_KEY="your-api-key-here"
+```
+
 Open [http://localhost:3000](http://localhost:3000).
 
 **Optional:** Set `OPENAI_API_KEY` in `.env` for live AI. Without it, all AI steps use deterministic fallbacks — the demo runs fully either way.
