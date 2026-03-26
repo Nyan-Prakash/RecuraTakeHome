@@ -38,13 +38,13 @@ npm run demo:reset
 
 ### 1. Workflow engine being linearly executed and only using ExecutionContext
 
-Each action is a handler that takes in context and returns the output and the updatedContext. The engine then merges into the main context. This is the best approach because it is important that it runs linearly. Every action needs the output + context from the one before. 
+Each action has a handler that takes in context and returns the output and the updatedContext. The engine then merges them into the main context without overriding previous data. This is the best approach because the current action needs the data from all previous actions. Every action needs the output + context from the one before. 
 
-**The tradeoff**: A parallel system would be difficult to implement because of this need for linear execution. However one improvement would be running the isolated actions such as `research_attendee` and `research_company` etc in parallel. This would speed up the execution.
+**The tradeoff**: A parallel system would be difficult to implement because of this need for linear execution. However one improvement would be running the isolated actions such as `research_attendee` and `research_company` etc in parallel. This would speed up the execution but increase complexity.
 
 ### 2. Dependency validation before execution
 
-Some actions have prerequistes for example `extract_availability` must run before `find_open_slot` because it would be impossible to find an open slot if the availability window was empty. However the wordflow can you have runtime errors which I will explain later.
+Some actions have prerequistes for example `extract_availability` must run before `find_open_slot` because it would be impossible to find an open slot if the availability window was empty. This is an example of an error being caught before running. All workflows are validated before running.
 
 ### 3. Action registry / handler map pattern
 
@@ -55,8 +55,6 @@ The tradeoff is that invalid action names fail at runtime rather than compile ti
 ### 4. Fallback exists if AI fails
 
 I made sure that the program will still run if nonessential fields are not populated. For example if you run the `summarizeMeetingEmail` action and the AI doesn't return anything the program will still work and later a confirmation email can be generate it just won't have the email summary. An essential field that will cause an error is if `extract_availability` doesn't return open slots because then the `find_open_slot` action can't run.
-
-### 5. How failures work
 
 I chose a middle ground between allowing the program to silently fail and always break when there is an error. My first check if the validation of workflow before even running the program. This is mention in #2. These errors will fully stop the whole system. 
 
