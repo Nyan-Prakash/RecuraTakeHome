@@ -65,8 +65,8 @@ The tradeoff I made is I can't guarantee that the emails will be 100% perfect th
 
 | Action | What it does | Needs | Produces |
 |---|---|---|---|
-| `summarize_email` | AI summary + meeting topic from the email | `originalEmail` | `summary`, `meetingTopic` |
-| `extract_availability` | Pulls time windows the sender offered | `originalEmail` | `availabilityWindows` |
+| `summarize_email` | AI summary| `originalEmail` | `summary`, `meetingTopic` |
+| `extract_availability` | Gets time windows for times in email | `originalEmail` | `availabilityWindows` |
 | `find_open_slot` | Finds a free calendar slot in those windows | `availabilityWindows` | `selectedSlot` |
 | `create_calendar_event` | Books the event on the calendar | `selectedSlot` | `createdEvent` |
 | `generate_confirmation_email` | Drafts a reply confirming the meeting time | `selectedSlot` | `replyDraft` |
