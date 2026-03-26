@@ -15,6 +15,7 @@ DATABASE_URL="file:./dev.db"
 OPENAI_API_KEY="your-api-key-here"
 ```
 
+then run:
 
 ```bash
 npm install
