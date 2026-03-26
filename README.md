@@ -27,7 +27,7 @@ npm run demo:reset
 
 ## Key Decisions
 
-### 1. Workflow engine being linearly and only using ExecutionContext
+### 1. Workflow engine being linearly executed and only using ExecutionContext
 
 Each action is a handler that takes in context and returns the output and the updatedContext. The engine then merges into the main context. This is the best approach because it is important that it runs linearly. Every action needs the output + context from the one before. 
 
