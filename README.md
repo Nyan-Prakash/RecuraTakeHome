@@ -38,11 +38,17 @@ Each action is a handler that takes in context and returns the output and the up
 
 Some actions have prerequistes for example `extract_availability` must run before `find_open_slot` because it would be impossible to find an open slot if the availability window was empty. However the wordflow can you have runtime errors which I will explain later.
 
-### 3. Fallback exists if AI fails
+##3. Action registry / handler map pattern
+
+Actions are registered by string key in a map, so adding a new action is as easy as implementing the handler and the service. You don't need to touch the engine at all.
+
+The tradeoff is that invalid action names fail at runtime rather than compile time. A typo in a workflow definition won't be caught until execution.
+
+### 4. Fallback exists if AI fails
 
 I made sure that the program will still run if nonessential fields are not populated. For example if you run the `summarizeMeetingEmail` action and the AI doesn't return anything the program will still work and later a confirmation email can be generate it just won't have the email summary. An essential field that will cause an error is if `extract_availability` doesn't return open slots because then the `find_open_slot` action can't run.
 
-### 4. How failures work
+### 5. How failures work
 
 I chose a middle ground between allowing the program to silently fail and always break when there is an error. My first check if the validation of workflow before even running the program. This is mention in #2. These errors will fully stop the whole system. 
 
@@ -58,7 +64,9 @@ The tradeoff I made is I can't guarantee that the emails will be 100% perfect th
 
 **No timezone handling.** All times are treated as local server time. Cross-timezone emails will be interpreted literally "3pm" means 3pm in whatever timezone the server runs in.
 
-**Picking the correct event for cancellation isn't optimal.** It would be best to have a eventID that the cancellation email connects to however I just created a function to find the most probable one based on the email address match, company match, and body text match.
+**Picking the correct event for cancellation isn't optimal.** It would be best to have a eventID that the cancellation email connects to however I just created a function to find the most probable one based on the email address match, company match, and body text match. It also chooses the next more recent meeting with that email. So it is impossible distinguish between different meetings with the same email. I decided that that feature is possible for me to cut.
+
+**Integrations** This application could easily have integrations into Google Calendar API, however due to time and scale I decided to cut that
 
 ## Triggers
 
