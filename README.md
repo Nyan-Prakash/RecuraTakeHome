@@ -15,11 +15,10 @@ DATABASE_URL="file:./dev.db"
 OPENAI_API_KEY="your-api-key-here"
 ```
 
-then run:
-
 ```bash
 npm install
 npx prisma migrate dev
+npx prisma generate
 npm run db:seed
 npm run dev
 ```
