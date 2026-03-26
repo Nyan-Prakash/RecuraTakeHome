@@ -8,18 +8,19 @@ https://www.youtube.com/watch?v=z0mLqrGd9jQ (5:43)
 
 ## Setup
 
-```bash
-npm install
-npx prisma migrate dev
-npm run db:seed
-npm run dev
-```
-
 Create a `.env` file in the project root:
 
 ```
 DATABASE_URL="file:./dev.db"
 OPENAI_API_KEY="your-api-key-here"
+```
+
+
+```bash
+npm install
+npx prisma migrate dev
+npm run db:seed
+npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
