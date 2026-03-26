@@ -203,7 +203,7 @@ export async function findEventBySenderEmail(args: {
 
   const events = await prisma.calendarEvent.findMany({
     where: {
-      status: { in: ["scheduled", "cancelled"] },
+      status: "scheduled",
       startTime: { gte: lookback },
       attendeeEmail: args.senderEmail.toLowerCase(),
     },
