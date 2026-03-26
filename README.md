@@ -38,7 +38,7 @@ Each action is a handler that takes in context and returns the output and the up
 
 Some actions have prerequistes for example `extract_availability` must run before `find_open_slot` because it would be impossible to find an open slot if the availability window was empty. However the wordflow can you have runtime errors which I will explain later.
 
-##3. Action registry / handler map pattern
+###3. Action registry / handler map pattern
 
 Actions are registered by string key in a map, so adding a new action is as easy as implementing the handler and the service. You don't need to touch the engine at all.
 
