@@ -63,8 +63,8 @@ The tradeoff I made is I can't guarantee that the emails will be 100% perfect th
 
 | Trigger | What it does | Required fields |
 |---|---|---|
-| `meeting_request_received` | Someone emails asking to schedule a meeting | `emailText`, `senderEmail` (optional) |
-| `meeting_reschedule_requested` | Someone emails to cancel/reschedule a meeting | `emailText`, `senderEmail` (required) |
+| `meeting_request_received` | Someone emails asking to schedule a meeting | `emailText`, `senderEmail` |
+| `meeting_reschedule_requested` | Someone emails to cancel/reschedule a meeting | `emailText`, `senderEmail`|
 
 ## Actions
 
