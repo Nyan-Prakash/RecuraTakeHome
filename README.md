@@ -3,7 +3,7 @@
 
 ## DEMO VIDEO: 
 Sorry for it being a bit long
-https://www.youtube.com/watch?v=z0mLqrGd9jQ
+https://www.youtube.com/watch?v=z0mLqrGd9jQ (5:43)
 
 
 ## Setup
