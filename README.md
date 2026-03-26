@@ -1,4 +1,9 @@
-# DECIDE.md
+# README.md
+
+
+## DEMO VIDEO: 
+https://www.youtube.com/watch?v=z0mLqrGd9jQ
+
 
 ## Setup
 
@@ -22,7 +27,7 @@ npm run demo:reset
 
 ## Key Decisions
 
-### 1. Workflow engine as a pure context pipeline
+### 1. Workflow engine being linearly and only using ExecutionContext
 
 Each action is a handler that takes in context and returns the output and the updatedContext. The engine then merges into the main context. This is the best approach because it is important that it runs linearly. Every action needs the output + context from the one before. 
 
@@ -58,8 +63,8 @@ The tradeoff I made is I can't guarantee that the emails will be 100% perfect th
 
 | Trigger | What it does | Required fields |
 |---|---|---|
-| `meeting_request_received` | Someone emails asking to schedule a meeting | `emailText`, `senderEmail` (optional) |
-| `meeting_reschedule_requested` | Someone emails to cancel/reschedule a meeting | `emailText`, `senderEmail` (required) |
+| `meeting_request_received` | Someone emails asking to schedule a meeting | `emailText`, `senderEmail` |
+| `meeting_reschedule_requested` | Someone emails to cancel/reschedule a meeting | `emailText`, `senderEmail`|
 
 ## Actions
 
